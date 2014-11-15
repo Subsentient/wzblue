@@ -1,4 +1,8 @@
 *.o
 *.gch
+src/*.o
+src/*.gch
+win32/*.o
+win32/*.gch
 wzblue
 wzblue.exe
