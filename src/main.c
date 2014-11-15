@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 		TimeStruct = localtime(&Clock);
 		strftime(TimeBuf, sizeof TimeBuf, "%Y-%m-%d %I:%M:%S %p", TimeStruct);
 		
-		printf("Last update: %s\n\n", TimeBuf);
+		printf("Last update: %s\n", TimeBuf);
 		
 		WZ_GetGamesList(Server, Port, WZLegacy);
 		
