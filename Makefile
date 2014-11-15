@@ -1,12 +1,10 @@
-CFLAGS = -std=gnu89 -pedantic -Wall -g -O0
-OUTFILE = wzblue
-
-ifeq ($(OS),WIN)
-	CFLAGS += -lws2_32 -DWIN
-	OUTFILE = wzblue.exe
-endif
 
 all:
-	$(CC) lobbycomm.c netcore.c main.c -o $(OUTFILE) $(CFLAGS)
+ifeq ($(OS),WIN)
+	$(MAKE) -C win32
+endif
+	$(MAKE) -C src
 clean:
+	$(MAKE) -C src clean
+	$(MAKE) -C win32 clean
 	rm -f wzblue wzblue.exe

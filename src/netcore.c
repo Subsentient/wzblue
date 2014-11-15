@@ -30,7 +30,7 @@ Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescript
 	if ((HostnameStruct = gethostbyname(InHost)) == NULL)
 	{
 		
-		fprintf(stderr, "Failed to resolve hostname \"%s\".", InHost);
+		fprintf(stderr, "Failed to resolve hostname \"%s\".\n", InHost);
 		
 		return 0;
 	}
