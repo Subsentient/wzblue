@@ -6,8 +6,13 @@ Public domain. By Subsentient, 2014.
 
 #define WZBLUE_VERSION "0.1"
 
+#define REFRESH_RATE 10 /*10 secs.*/
 typedef signed char Bool;
 enum { false, true };
+typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
+
+/*main.c*/
+void WZBlue_SetTextColor(ConsoleColor Color);
 
 /*netcore.c*/
 Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);

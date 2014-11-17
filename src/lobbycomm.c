@@ -142,6 +142,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	char OutBuf[2048];
 	uint32_t GamesAvailable = 0, Inc = 0;
 	uint32_t LastHosted = 0;
+	ConsoleColor LabelColor = ENDCOLOR;
 	
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
@@ -195,13 +196,45 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	/*Now send them to the user.*/
 	for (Inc = 0; Inc < GamesAvailable; ++Inc)
 	{
-		snprintf(OutBuf, sizeof OutBuf, "\n[%d] Name: %s | Map: %s %s| Host: %s\n"
+		char ModString[384] = { '\0' };
+
+		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
+		{ /*Game is full.*/
+			LabelColor = RED;
+		}
+		else if (GamesList[Inc].PrivateGame)
+		{ /*Private game.*/
+			LabelColor = YELLOW;
+		}
+		else if (*GamesList[Inc].ModList != '\0')
+		{ /*It has mods.*/
+			LabelColor = MAGENTA;
+		}
+		else
+		{ /*Normal, joinable game.*/
+			LabelColor = GREEN;
+		}
+
+		/*Add mod warning even if we don't get the color for that.*/
+		if (GamesList[Inc].ModList[0] != '\0')
+		{
+			snprintf(ModString, sizeof ModString, " (mods: %s)",  GamesList[Inc].ModList);
+		}
+		
+		WZBlue_SetTextColor(LabelColor); /*Set the game color.*/
+		printf("\n[%d]", Inc + 1); /*Print our colored label.*/
+		WZBlue_SetTextColor(ENDCOLOR); /*Turn off colors.*/
+		
+		
+		snprintf(OutBuf, sizeof OutBuf, " Name: %s | Map: %s%s | Host: %s\n"
 				"Players: %d/%d %s| IP: %s | Version: %s",
-				Inc + 1, GamesList[Inc].GameName, GamesList[Inc].Map, GamesList[Inc].Mods ? "(mods required) " : "",
-				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
+				GamesList[Inc].GameName, GamesList[Inc].Map,
+				ModString, GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
 				GamesList[Inc].PrivateGame ? "(private) " : "", GamesList[Inc].NetSpecs.HostIP,
 				GamesList[Inc].VersionString);
+				
 		puts(OutBuf);
+		
 	}
 	
 	if (GamesList) free(GamesList);

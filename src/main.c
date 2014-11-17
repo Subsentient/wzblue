@@ -16,7 +16,6 @@ int main(int argc, char **argv)
 {
 	int Inc = 1;
 	char Server[512] = "lobby.wz2100.net";
-	int Refresh = 7;
 	int Port = 9990;
 	time_t Clock = 0;
 	struct tm *TimeStruct = NULL;
@@ -40,17 +39,6 @@ int main(int argc, char **argv)
 			{
 				strncpy(Server, argv[Inc] + (sizeof "--server=" - 1), sizeof Server - 1);
 				Server[sizeof Server - 1] = '\0';
-			}
-			else if (!strncmp(argv[Inc], "--refresh=", sizeof "--refresh=" - 1))
-			{
-				Refresh = atoi(argv[Inc] + sizeof "--refresh=" - 1);
-				
-				if (Refresh < 3)
-				{
-					fprintf(stderr, "Minimum refresh time is 3 seconds.\nPlease specify a value greater or equal to 3.\n");
-					exit(1);
-				}
-				
 			}
 			else if (!strncmp(argv[Inc], "--port=", sizeof "--port=" - 1))
 			{
@@ -93,10 +81,70 @@ int main(int argc, char **argv)
 		WZ_GetGamesList(Server, Port, WZLegacy);
 		
 #ifdef WIN
-		Sleep(Refresh * 1000);
+		Sleep(REFRESH_RATE * 1000);
 #else
-		usleep(Refresh * 1000000);
+		usleep(REFRESH_RATE * 1000000);
 #endif
 	}
 	return 0;
+}
+
+void WZBlue_SetTextColor(ConsoleColor Color)
+{
+#ifndef WIN
+	printf("\033[%dm", Color);
+#else
+	BOOL (WINAPI *DoSetConsoleTextAttribute)(HANDLE, WORD) = NULL;
+	HANDLE WDescriptor = GetStdHandle(STD_OUTPUT_HANDLE);
+	static HMODULE kernel32 = (HMODULE)0xffffffff;
+	WORD WinColor = 0;
+	
+	if (kernel32 == 0)
+	{
+		return;
+	}
+	else if(kernel32 == (HMODULE)0xffffffff)
+	{
+		kernel32 = LoadLibrary("kernel32.dll");
+		
+		if (kernel32 == 0)
+		{
+			return;
+		}
+	}
+	
+	/*Not supported.*/
+	if (!(DoSetConsoleTextAttribute = (BOOL (WINAPI *)(HANDLE, WORD))GetProcAddress(kernel32, "SetConsoleTextAttribute"))) return;
+	
+	
+	switch (Color)
+	{
+		case BLACK:
+			WinColor = 0;
+			break;
+		case BLUE:
+			WinColor = 1;
+			break;
+		case GREEN:
+			WinColor = 2;
+			break;
+		case CYAN:
+			WinColor = 3;
+			break;
+		case RED:
+			WinColor = 4;
+			break;
+		case MAGENTA:
+			WinColor = 5;
+			break;
+		case YELLOW:
+			WinColor = 6;
+			break;
+		default: /*Everything else just becomes white.*/
+			WinColor = 7;
+			break;
+	}
+			
+	DoSetConsoleTextAttribute(WDescriptor, WinColor);
+#endif
 }
