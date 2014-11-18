@@ -143,6 +143,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	uint32_t GamesAvailable = 0, Inc = 0;
 	uint32_t LastHosted = 0;
 	ConsoleColor LabelColor = ENDCOLOR;
+	char MOTD[512] = { '\0' };
 	
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
@@ -188,10 +189,42 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 		
 		LastHosted = ntohl(LastHosted);
 	}
+	else
+	{ /*3.1 protocol.*/
+		uint32_t CodeBuf[2];
+		
+		if (!Net_Read(WZSocket, CodeBuf, sizeof(uint32_t) * 2, false) ||
+			!Net_Read(WZSocket, MOTD, CodeBuf[1], true))
+		{
+			free(GamesList);
+			return false;
+		}
+	}
+		
 	
 	Net_Disconnect(WZSocket);
 	
-	printf("%u game%s available\n", (unsigned)GamesAvailable, GamesAvailable == 1 ? "" : "s");
+	if (WZLegacy)
+	{ /*Warzone 2100 Legacy-style lobby server.*/
+		if (LastHosted > 60)
+		{ /*Show in minutes.*/
+			printf("%u game%s available. Last game hosted %d minutes ago.", (unsigned)GamesAvailable,
+					GamesAvailable == 1 ? "" : "s", LastHosted / 60);
+		}
+		else
+		{ /*Show in seconds.*/
+			printf("%u game%s available. Last game hosted %d seconds ago.", (unsigned)GamesAvailable,
+					GamesAvailable == 1 ? "" : "s", LastHosted);
+		}
+	}
+	else
+	{ /*Standard Warzone protocol.*/
+		printf("%u game%s available.\nMOTD: ", (unsigned)GamesAvailable, GamesAvailable == 1 ? "" : "s");
+		WZBlue_SetTextColor(CYAN);
+		printf("\"%s\"\n", MOTD);
+		WZBlue_SetTextColor(ENDCOLOR);
+	}
+	fflush(NULL);
 	
 	/*Now send them to the user.*/
 	for (Inc = 0; Inc < GamesAvailable; ++Inc)
@@ -238,23 +271,6 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	}
 	
 	if (GamesList) free(GamesList);
-	
-	if (WZLegacy)
-	{ /*Legacy has something special.*/
-		if (!GamesAvailable)
-		{
-			snprintf(OutBuf, sizeof OutBuf, "No games are in the lobby at the moment. "
-					"The last game was hosted %u seconds (%u minutes) ago.",
-					(unsigned)LastHosted, (unsigned)LastHosted / 60);
-		}
-		else
-		{
-			snprintf(OutBuf, sizeof OutBuf, "Game number %u is the most recently hosted, "
-					"at %u seconds (%u minutes) ago.",
-					(unsigned)Inc, (unsigned)LastHosted, (unsigned)LastHosted / 60);
-		}
-		puts(OutBuf);
-	}
 		
 	
 	return true;
