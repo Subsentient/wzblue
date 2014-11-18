@@ -54,9 +54,13 @@ int main(int argc, char **argv)
 				puts("Treating server as Warzone 2100 Legacy lobby server.");
 				WZLegacy = true;
 			}
+			else if (!strcmp(argv[Inc], "--help"))
+			{
+				puts("Arguments are --server=myserver.com, --port=9990, and --wzlegacy.");
+			}
 			else
 			{
-				fprintf(stderr, "Unknown command switch.\n");
+				fprintf(stderr, "Unknown command switch. Try --help.\n");
 				exit(1);
 			}
 		}
