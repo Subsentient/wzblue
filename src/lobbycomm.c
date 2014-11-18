@@ -194,7 +194,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 		uint32_t CodeBuf[2];
 		
 		if (!Net_Read(WZSocket, CodeBuf, sizeof(uint32_t) * 2, false) ||
-			!Net_Read(WZSocket, MOTD, CodeBuf[1], true))
+			!Net_Read(WZSocket, MOTD, CodeBuf[1], false))
 		{
 			free(GamesList);
 			return false;
@@ -208,13 +208,13 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	{ /*Warzone 2100 Legacy-style lobby server.*/
 		if (LastHosted > 60)
 		{ /*Show in minutes.*/
-			printf("%u game%s available. Last game hosted %d minutes ago.", (unsigned)GamesAvailable,
-					GamesAvailable == 1 ? "" : "s", LastHosted / 60);
+			printf("%u game%s available. Last game hosted %d minute%s ago.\n", (unsigned)GamesAvailable,
+					GamesAvailable == 1 ? "" : "s", LastHosted / 60, LastHosted / 60 == 1 ? "" : "s");
 		}
 		else
 		{ /*Show in seconds.*/
-			printf("%u game%s available. Last game hosted %d seconds ago.", (unsigned)GamesAvailable,
-					GamesAvailable == 1 ? "" : "s", LastHosted);
+			printf("%u game%s available. Last game hosted %d second%s ago.\n", (unsigned)GamesAvailable,
+					GamesAvailable == 1 ? "" : "s", LastHosted, LastHosted == 1 ? "" : "s");
 		}
 	}
 	else
