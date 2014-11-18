@@ -208,12 +208,12 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	{ /*Warzone 2100 Legacy-style lobby server.*/
 		if (LastHosted > 60)
 		{ /*Show in minutes.*/
-			printf("%u game%s available. Last game hosted %d minute%s ago.\n", (unsigned)GamesAvailable,
+			printf("%u game%s available.\nLast game hosted %d minute%s ago.\n", (unsigned)GamesAvailable,
 					GamesAvailable == 1 ? "" : "s", LastHosted / 60, LastHosted / 60 == 1 ? "" : "s");
 		}
 		else
 		{ /*Show in seconds.*/
-			printf("%u game%s available. Last game hosted %d second%s ago.\n", (unsigned)GamesAvailable,
+			printf("%u game%s available.\nLast game hosted %d second%s ago.\n", (unsigned)GamesAvailable,
 					GamesAvailable == 1 ? "" : "s", LastHosted, LastHosted == 1 ? "" : "s");
 		}
 	}

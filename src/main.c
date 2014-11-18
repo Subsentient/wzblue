@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 		TimeStruct = localtime(&Clock);
 		strftime(TimeBuf, sizeof TimeBuf, "%Y-%m-%d %I:%M:%S %p", TimeStruct);
 		
-		printf("Last update: %s\n", TimeBuf); fflush(NULL);
+		printf("Last update was %s. ", TimeBuf); fflush(NULL); /*We don't leave a newline on purpose.*/
 		
 		WZ_GetGamesList(Server, Port, WZLegacy);
 		
