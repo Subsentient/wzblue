@@ -41,7 +41,7 @@ typedef struct
 	char ModList[255];
 	uint32_t MajorVer, MinorVer;
 	uint32_t PrivateGame;
-	uint32_t PureGame;
+	uint32_t MapMod; /*PureGame in 2.3/Legacy, PureMap in 3.1.*/
 	uint32_t Mods;
 	
 	uint32_t GameID;
@@ -230,7 +230,8 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	for (Inc = 0; Inc < GamesAvailable; ++Inc)
 	{
 		char ModString[384] = { '\0' };
-
+		const Bool MapMod = !WZLegacy && GamesList[Inc].MapMod;
+		
 		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
 		{ /*Game is full.*/
 			LabelColor = RED;
@@ -247,7 +248,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 		{ /*Normal, joinable game.*/
 			LabelColor = GREEN;
 		}
-
+		
 		/*Add mod warning even if we don't get the color for that.*/
 		if (GamesList[Inc].ModList[0] != '\0')
 		{
@@ -260,11 +261,11 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 		
 		
 		snprintf(OutBuf, sizeof OutBuf, " Name: %s | Map: %s%s | Host: %s\n"
-				"Players: %d/%d %s| IP: %s | Version: %s",
-				GamesList[Inc].GameName, GamesList[Inc].Map,
-				ModString, GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
+				"Players: %d/%d %s| IP: %s | Version: %s%s",
+				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " (map-mod)" : "",
+				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
 				GamesList[Inc].PrivateGame ? "(private) " : "", GamesList[Inc].NetSpecs.HostIP,
-				GamesList[Inc].VersionString);
+				GamesList[Inc].VersionString, ModString);
 				
 		puts(OutBuf);
 		
