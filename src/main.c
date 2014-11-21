@@ -12,6 +12,9 @@ Public domain. By Subsentient, 2014.
 #ifdef WIN
 #include <windows.h>
 #endif
+
+static unsigned RefreshRate = 30; /*30 secs lobby refresh delay.*/
+
 int main(int argc, char **argv)
 {
 	int Inc = 1;
@@ -49,6 +52,18 @@ int main(int argc, char **argv)
 					exit(1);
 				}
 			}
+			else if (!strncmp(argv[Inc], "--refresh=", sizeof "--refresh=" - 1))
+			{
+				unsigned NewRefresh = atoi(argv[Inc] + (sizeof "--refresh=" - 1));
+				
+				if (RefreshRate > NewRefresh) /*If we're below the default, problem.*/
+				{
+					fprintf(stderr, "ERROR: Refresh rate cannot be under %u seconds.\n", RefreshRate);
+					exit(1);
+				}
+				
+				RefreshRate = NewRefresh;
+			}
 			else if (!strcmp(argv[Inc], "--wzlegacy"))
 			{
 				puts("Treating server as Warzone 2100 Legacy lobby server.");
@@ -56,7 +71,7 @@ int main(int argc, char **argv)
 			}
 			else if (!strcmp(argv[Inc], "--help"))
 			{
-				puts("Arguments are --server=myserver.com, --port=9990, and --wzlegacy.");
+				puts("Arguments are --server=myserver.com, --port=9990, --wzlegacy, and --refresh=30.");
 			}
 			else
 			{
@@ -85,9 +100,9 @@ int main(int argc, char **argv)
 		WZ_GetGamesList(Server, Port, WZLegacy);
 		
 #ifdef WIN
-		Sleep(REFRESH_RATE * 1000);
+		Sleep(RefreshRate * 1000);
 #else
-		usleep(REFRESH_RATE * 1000000);
+		usleep(RefreshRate * 1000000);
 #endif
 	}
 	return 0;
