@@ -69,9 +69,11 @@ int main(int argc, char **argv)
 				puts("Treating server as Warzone 2100 Legacy lobby server.");
 				WZLegacy = true;
 			}
-			else if (!strcmp(argv[Inc], "--help"))
+			else if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{
+				puts("WZBlue version " WZBLUE_VERSION);
 				puts("Arguments are --server=myserver.com, --port=9990, --wzlegacy, and --refresh=30.");
+				exit(0);
 			}
 			else
 			{

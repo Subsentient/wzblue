@@ -4,6 +4,8 @@ See http://github.com/Subsentient/aqu4bot for aqu4bot's source code.
 Public domain. By Subsentient, 2014.
 */
 
+#define WZBLUE_VERSION "0.3"
+
 typedef signed char Bool;
 enum { false, true };
 typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
