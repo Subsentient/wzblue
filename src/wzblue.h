@@ -18,5 +18,5 @@ Bool Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, Bool Tex
 Bool Net_Disconnect(int SockDescriptor);
 Bool Net_Write(int SockDescriptor, const char *InMsg);
 
-/*lobbycomm.c*/
+/*wz.c*/
 Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy);

@@ -1,6 +1,6 @@
 CFLAGS = -std=gnu89 -pedantic -Wall -g -O0
 OUTFILE = ../wzblue
-OBJECTS = lobbycomm.c netcore.c main.c
+OBJECTS = wz.c netcore.c main.c
 
 ifeq ($(OS),WIN)
 	CFLAGS += -lws2_32 -DWIN
