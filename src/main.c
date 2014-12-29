@@ -13,7 +13,9 @@ Public domain. By Subsentient, 2014.
 #include <windows.h>
 #endif
 
-static unsigned RefreshRate = 30; /*30 secs lobby refresh delay.*/
+#define ENTER_MINREFRESH 3
+
+static unsigned RefreshRate = 15; /*15 secs lobby refresh delay.*/
 
 int main(int argc, char **argv)
 {
@@ -24,6 +26,8 @@ int main(int argc, char **argv)
 	struct tm *TimeStruct = NULL;
 	char TimeBuf[256];
 	Bool WZLegacy = false;
+	Bool EnterKey = false;
+	time_t LastEnter = time(NULL);
 #ifdef WIN /*Fire up winsock2.*/
 	WSADATA WSAData;
 
@@ -72,8 +76,12 @@ int main(int argc, char **argv)
 			else if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{
 				puts("WZBlue version " WZBLUE_VERSION);
-				puts("Arguments are --server=myserver.com, --port=9990, --wzlegacy, and --refresh=30.");
+				puts("Arguments are --server=myserver.com, --port=9990, --wzlegacy, --enterkey, --refresh=30.");
 				exit(0);
+			}
+			else if (!strcmp(argv[Inc], "--enterkey"))
+			{
+				EnterKey = true;
 			}
 			else
 			{
@@ -101,11 +109,33 @@ int main(int argc, char **argv)
 		
 		WZ_GetGamesList(Server, Port, WZLegacy);
 		
+		if (EnterKey)
+		{
+			time_t CurTime;
+			
+			WZBlue_SetTextColor(GREEN);
+			puts("Strike enter to refresh.");
+			WZBlue_SetTextColor(ENDCOLOR);
+		ReWaitEnter:
+			getchar();
+			CurTime = time(NULL);
+			
+			if (CurTime - LastEnter < ENTER_MINREFRESH)
+			{
+				printf("Please wait %u seconds before refreshing.\n", (unsigned)(ENTER_MINREFRESH - (CurTime - LastEnter)));
+				goto ReWaitEnter;
+			}
+			
+			LastEnter = CurTime;
+		}
+		else
+		{	
 #ifdef WIN
-		Sleep(RefreshRate * 1000);
+			Sleep(RefreshRate * 1000);
 #else
-		usleep(RefreshRate * 1000000);
+			usleep(RefreshRate * 1000000);
 #endif
+		}
 	}
 	return 0;
 }
