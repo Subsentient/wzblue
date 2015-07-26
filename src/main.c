@@ -60,12 +60,6 @@ int main(int argc, char **argv)
 			{
 				unsigned NewRefresh = atoi(argv[Inc] + (sizeof "--refresh=" - 1));
 				
-				if (RefreshRate > NewRefresh) /*If we're below the default, problem.*/
-				{
-					fprintf(stderr, "ERROR: Refresh rate cannot be under %u seconds.\n", RefreshRate);
-					exit(1);
-				}
-				
 				RefreshRate = NewRefresh;
 			}
 			else if (!strcmp(argv[Inc], "--wzlegacy"))
