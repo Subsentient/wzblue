@@ -64,7 +64,7 @@ Bool Net_Write(int SockDescriptor, const char *InMsg)
 
 	do
 	{
-		Transferred = send(SockDescriptor, InMsg, (StringSize - TotalTransferred), 0);
+		Transferred = send(SockDescriptor, InMsg + TotalTransferred, (StringSize - TotalTransferred), 0);
 		
 		if (Transferred == -1) /*This is ugly I know, but it's converted implicitly, so shut up.*/
 		{
