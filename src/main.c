@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 		TimeStruct = localtime(&Clock);
 		strftime(TimeBuf, sizeof TimeBuf, "%Y-%m-%d %I:%M:%S %p", TimeStruct);
 		
-		printf("Last update was %s. ", TimeBuf); fflush(NULL); /*We don't leave a newline on purpose.*/
+		printf("Last change was %s. ", TimeBuf); fflush(NULL); /*We don't leave a newline on purpose.*/
 		
 		if (GamesAvailable) WZ_SendGamesList(GamesList, GamesAvailable);
 		else puts("No games available.");
