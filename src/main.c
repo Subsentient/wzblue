@@ -23,7 +23,6 @@ int main(int argc, char **argv)
 	time_t Clock = 0;
 	struct tm *TimeStruct = NULL;
 	char TimeBuf[256];
-	Bool WZLegacy = false;
 	Bool EnterKey = false;
 #ifdef WIN /*Fire up winsock2.*/
 	WSADATA WSAData;
@@ -59,15 +58,10 @@ int main(int argc, char **argv)
 				
 				RefreshRate = NewRefresh;
 			}
-			else if (!strcmp(argv[Inc], "--wzlegacy"))
-			{
-				puts("Treating server as Warzone 2100 Legacy lobby server.");
-				WZLegacy = true;
-			}
 			else if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{
 				puts("WZBlue version " WZBLUE_VERSION);
-				puts("Arguments are --server=myserver.com, --port=9990, --wzlegacy, --enterkey, --refresh=30.");
+				puts("Arguments are --server=myserver.com, --port=9990, --enterkey, --refresh=30.");
 				exit(0);
 			}
 			else if (!strcmp(argv[Inc], "--enterkey"))
@@ -81,10 +75,17 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	
+	uint32_t GamesAvailable = 0;
 	while (1)
 	{
+		GamesAvailable = 0;
+		GameStruct *GamesList = NULL;
+		Bool Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
 		
+		if (GamesAvailable)
+		{
+			if (!Changed) goto SkipPrinting;
+		}
 	/*lazy way to clear the screen.*/
 #ifdef WIN
 		system("cls");
@@ -98,8 +99,10 @@ int main(int argc, char **argv)
 		
 		printf("Last update was %s. ", TimeBuf); fflush(NULL); /*We don't leave a newline on purpose.*/
 		
-		WZ_GetGamesList(Server, Port, WZLegacy);
+		if (GamesAvailable) WZ_SendGamesList(GamesList, GamesAvailable);
+		else puts("No games available.");
 		
+	SkipPrinting:
 		if (EnterKey)
 		{
 			

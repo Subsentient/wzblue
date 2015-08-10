@@ -18,39 +18,6 @@ Public domain. By Subsentient, 2014.
 
 #include "wzblue.h"
 
-typedef struct
-{
-	uint32_t StructVer;
-	char GameName[64];
-	
-	struct
-	{
-		int32_t Size;
-		int32_t Flags;
-		char HostIP[40];
-		int32_t MaxPlayers;
-		int32_t CurPlayers;
-		int32_t UserFlags[4];
-	} NetSpecs;
-	
-	char SecondaryHosts[2][40];
-	char Extra[159];
-	char Map[40];
-	char HostNick[40];
-	char VersionString[64];
-	char ModList[255];
-	uint32_t MajorVer, MinorVer;
-	uint32_t PrivateGame;
-	uint32_t MapMod; /*PureGame in 2.3/Legacy, PureMap in 3.1.*/
-	uint32_t Mods;
-	
-	uint32_t GameID;
-	
-	uint32_t Unused1;
-	uint32_t Unused2;
-	uint32_t Unused3;
-} GameStruct;
-
 static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct);
 
 static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
@@ -135,15 +102,14 @@ static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 	return true;
 }
 
-Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
+Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer)
 {
 	GameStruct *GamesList = NULL;
+	static GameStruct *PrevList;
+	static uint32_t PrevAvailable;
 	int WZSocket = 0;
-	char OutBuf[2048];
-	uint32_t GamesAvailable = 0, Inc = 0;
-	uint32_t LastHosted = 0;
-	ConsoleColor LabelColor = ENDCOLOR;
-	char MOTD[512] = { '\0' };
+	uint32_t Inc = 0;
+
 	
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
@@ -158,79 +124,72 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 	}
 	
 	/*Get number of available games.*/
-	if (!Net_Read(WZSocket, &GamesAvailable, sizeof(uint32_t), false))
+	if (!Net_Read(WZSocket, GamesAvailable, sizeof(uint32_t), false))
 	{
 		puts("Unable to read data from connection to lobby server!");
 		return false;
 	}
 	
-	GamesAvailable = ntohl(GamesAvailable);
+	*GamesAvailable = ntohl(*GamesAvailable);
 	
 	/*Allocate space for them.*/
-	GamesList = malloc(sizeof(GameStruct) * GamesAvailable);
-
-	for (; Inc < GamesAvailable; ++Inc)
+	*Pointer = GamesList = calloc(*GamesAvailable + 1, sizeof(GameStruct));
+	
+	for (; Inc < *GamesAvailable; ++Inc)
 	{ /*Receive the listings.*/
 		if (!WZ_RecvGameStruct(WZSocket, GamesList + Inc))
 		{
+			if (PrevList) free(PrevList);
+			PrevList = NULL;
 			free(GamesList);
 			return false;
 		}
 	}
-	
-	/*If we're Legacy protocol, retrieve the time since last hosted.*/
-	if (WZLegacy)
-	{
-		if (!Net_Read(WZSocket, &LastHosted, sizeof(uint32_t), false))
-		{
-			free(GamesList);
-			return false;
-		}
-		
-		LastHosted = ntohl(LastHosted);
-	}
-	else
-	{ /*3.1 protocol.*/
-		uint32_t CodeBuf[2];
-		
-		if (!Net_Read(WZSocket, CodeBuf, sizeof(uint32_t) * 2, false) ||
-			!Net_Read(WZSocket, MOTD, CodeBuf[1], false))
-		{
-			free(GamesList);
-			return false;
-		}
-	}
-		
 	
 	Net_Disconnect(WZSocket);
 	
-	if (WZLegacy)
-	{ /*Warzone 2100 Legacy-style lobby server.*/
-		if (LastHosted > 60)
-		{ /*Show in minutes.*/
-			printf("%u game%s available.\nLast game hosted %d minute%s ago.\n", (unsigned)GamesAvailable,
-					GamesAvailable == 1 ? "" : "s", LastHosted / 60, LastHosted / 60 == 1 ? "" : "s");
+	Bool RetVal = false;
+	if (PrevList)
+	{
+		//Compare the lists to see if the new one is identical to the old.
+		if (PrevAvailable != *GamesAvailable)
+		{
+			RetVal = true;
 		}
 		else
-		{ /*Show in seconds.*/
-			printf("%u game%s available.\nLast game hosted %d second%s ago.\n", (unsigned)GamesAvailable,
-					GamesAvailable == 1 ? "" : "s", LastHosted, LastHosted == 1 ? "" : "s");
+		{
+			for (Inc = 0; Inc < *GamesAvailable && PrevList[Inc].GameName[0] != '\0'; ++Inc)
+			{
+				if (memcmp(GamesList + Inc, PrevList + Inc, sizeof(GameStruct)) != 0)
+				{
+					RetVal = true;
+					break;
+				}
+			}
 		}
 	}
 	else
-	{ /*Standard Warzone protocol.*/
-		printf("%u game%s available.\nMOTD: ", (unsigned)GamesAvailable, GamesAvailable == 1 ? "" : "s");
-		WZBlue_SetTextColor(CYAN);
-		printf("\"%s\"\n", MOTD);
-		WZBlue_SetTextColor(ENDCOLOR);
+	{
+		RetVal = true;
 	}
-	fflush(NULL);
+	PrevAvailable = *GamesAvailable;
+	if (PrevList) free(PrevList);
+	PrevList = GamesList;
+
+	return RetVal;
 	
+}
+
+void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable)
+{
+	uint32_t Inc = 0;
+	char OutBuf[2048];
+	ConsoleColor LabelColor = ENDCOLOR;
 	/*Now send them to the user.*/
 	for (Inc = 0; Inc < GamesAvailable; ++Inc)
 	{
 		char ModString[384] = { '\0' };
-		const Bool MapMod = !WZLegacy && GamesList[Inc].MapMod;
+		const Bool MapMod = GamesList[Inc].MapMod;
 		
 		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
 		{ /*Game is full.*/
@@ -270,10 +229,4 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, Bool WZLegacy)
 		puts(OutBuf);
 		
 	}
-	
-	if (GamesList) free(GamesList);
-		
-	
-	return true;
-	
 }

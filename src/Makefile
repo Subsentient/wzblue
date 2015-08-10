@@ -1,4 +1,4 @@
-CFLAGS = -std=gnu89 -pedantic -Wall -g -O0
+CFLAGS = -std=gnu99 -pedantic -Wall -g -O0
 OUTFILE = ../wzblue
 OBJECTS = wz.c netcore.c main.c
 
