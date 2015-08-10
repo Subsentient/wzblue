@@ -13,8 +13,6 @@ Public domain. By Subsentient, 2014.
 #include <windows.h>
 #endif
 
-#define ENTER_MINREFRESH 3
-
 static unsigned RefreshRate = 15; /*15 secs lobby refresh delay.*/
 
 int main(int argc, char **argv)
@@ -27,7 +25,6 @@ int main(int argc, char **argv)
 	char TimeBuf[256];
 	Bool WZLegacy = false;
 	Bool EnterKey = false;
-	time_t LastEnter = time(NULL);
 #ifdef WIN /*Fire up winsock2.*/
 	WSADATA WSAData;
 
@@ -105,22 +102,11 @@ int main(int argc, char **argv)
 		
 		if (EnterKey)
 		{
-			time_t CurTime;
 			
 			WZBlue_SetTextColor(GREEN);
 			puts("Strike enter to refresh.");
 			WZBlue_SetTextColor(ENDCOLOR);
-		ReWaitEnter:
 			getchar();
-			CurTime = time(NULL);
-			
-			if (CurTime - LastEnter < ENTER_MINREFRESH)
-			{
-				printf("Please wait %u seconds before refreshing.\n", (unsigned)(ENTER_MINREFRESH - (CurTime - LastEnter)));
-				goto ReWaitEnter;
-			}
-			
-			LastEnter = CurTime;
 		}
 		else
 		{	
