@@ -7,7 +7,7 @@ Public domain. By Subsentient, 2014.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "0.4"
+#define WZBLUE_VERSION "0.5"
 
 typedef signed char Bool;
 enum { false, true };
