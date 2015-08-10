@@ -13,7 +13,7 @@ Public domain. By Subsentient, 2014.
 #include <windows.h>
 #endif
 
-static unsigned RefreshRate = 15; /*15 secs lobby refresh delay.*/
+static unsigned RefreshRate = 5; /*5 secs lobby refresh delay.*/
 
 int main(int argc, char **argv)
 {
@@ -31,6 +31,16 @@ int main(int argc, char **argv)
     { /*Initialize winsock*/
         fprintf(stderr, "Unable to initialize WinSock2!");
         exit(1);
+	}
+#endif
+
+#ifdef WIN
+	system("title WZBlue");
+#else
+	const char *Term = getenv("TERM");
+	if (!strcmp(Term, "xterm") || !strcmp(Term, "rxvt"))
+	{
+		fputs("\033]0;WZBlue\a", stdout);
 	}
 #endif
 
