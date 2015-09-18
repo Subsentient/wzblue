@@ -76,15 +76,21 @@ void GUI_DrawAboutDialog()
 
 	GtkWidget *Align = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
 	
-	GtkWidget *VBox = gtk_vbox_new(FALSE, 2);
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 3);
 	gtk_container_add(GTK_CONTAINER(AboutWin), VBox);
 	
-	GtkWidget *Label = gtk_label_new("WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION);
+	GtkWidget *Label1 = gtk_label_new("WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION);
+	char GTKVersion[64];
+	snprintf(GTKVersion, sizeof GTKVersion, "Compiled against GTK %d.%d", GTK_MAJOR_VERSION, GTK_MINOR_VERSION);
+	
+	GtkWidget *Label2 = gtk_label_new(GTKVersion);
+	
 	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	
 	gtk_container_add(GTK_CONTAINER(Align), Button);
 	
-	gtk_box_pack_start((GtkBox*)VBox, Label, TRUE, TRUE, 30);
+	gtk_box_pack_start((GtkBox*)VBox, Label1, TRUE, TRUE, 20);
+	gtk_box_pack_start((GtkBox*)VBox, Label2, TRUE, TRUE, 10);
 	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, FALSE, 0);
 	
 	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)GTK_NukeWidget, AboutWin);
@@ -298,11 +304,19 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 			gtk_button_set_label((GtkButton*)Button, "Game Full");
 		}
 		
-		gtk_container_add((GtkContainer*)Align, Button);
+		GtkWidget *HBox = gtk_hbox_new(false, 4);
+		GtkWidget *HBox2 = gtk_hbox_new(false, 2);
 		
-		GtkWidget *HBox = gtk_hbox_new(false, 3);
+		gtk_container_add((GtkContainer*)Align, HBox2);
+		
+		
+		GtkWidget *VSep = gtk_vseparator_new(), *VSep2 = gtk_vseparator_new();
+		
+		gtk_box_pack_start(GTK_BOX(HBox2), VSep2, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox2), Button, FALSE, FALSE, 0);
 		
 		gtk_box_pack_start(GTK_BOX(HBox), Icon, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox), VSep, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), Label, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), Align, TRUE, TRUE, 0);
 
