@@ -10,6 +10,7 @@ Public domain. By Subsentient, 2014.
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <gtk/gtk.h>
 #ifdef WIN
 #include <winsock2.h>
 #else
@@ -180,53 +181,3 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAva
 	
 }
 
-void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable)
-{
-	uint32_t Inc = 0;
-	char OutBuf[2048];
-	ConsoleColor LabelColor = ENDCOLOR;
-	/*Now send them to the user.*/
-	for (Inc = 0; Inc < GamesAvailable; ++Inc)
-	{
-		char ModString[384] = { '\0' };
-		const Bool MapMod = GamesList[Inc].MapMod;
-		
-		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
-		{ /*Game is full.*/
-			LabelColor = RED;
-		}
-		else if (GamesList[Inc].PrivateGame)
-		{ /*Private game.*/
-			LabelColor = YELLOW;
-		}
-		else if (*GamesList[Inc].ModList != '\0')
-		{ /*It has mods.*/
-			LabelColor = MAGENTA;
-		}
-		else
-		{ /*Normal, joinable game.*/
-			LabelColor = GREEN;
-		}
-		
-		/*Add mod warning even if we don't get the color for that.*/
-		if (GamesList[Inc].ModList[0] != '\0')
-		{
-			snprintf(ModString, sizeof ModString, " (mods: %s)",  GamesList[Inc].ModList);
-		}
-		
-		WZBlue_SetTextColor(LabelColor); /*Set the game color.*/
-		printf("\n[%d]", Inc + 1); /*Print our colored label.*/
-		WZBlue_SetTextColor(ENDCOLOR); /*Turn off colors.*/
-		
-		
-		snprintf(OutBuf, sizeof OutBuf, " Name: %s | Map: %s%s | Host: %s\n"
-				"Players: %d/%d %s| IP: %s | Version: %s%s",
-				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " (map-mod)" : "",
-				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
-				GamesList[Inc].PrivateGame ? "(private) " : "", GamesList[Inc].NetSpecs.HostIP,
-				GamesList[Inc].VersionString, ModString);
-				
-		puts(OutBuf);
-		
-	}
-}

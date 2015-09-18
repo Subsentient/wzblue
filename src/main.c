@@ -8,22 +8,55 @@ Public domain. By Subsentient, 2014.
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <gtk/gtk.h>
 #include "wzblue.h"
 #ifdef WIN
 #include <windows.h>
 #endif
 
 static unsigned RefreshRate = 5; /*5 secs lobby refresh delay.*/
+static char Server[128] = "lobby.wz2100.net"; //The lobby server hostname.
+static int Port = 9990;
+//Prototypes
 
+gboolean Main_LoopFunc(GtkWidget *ScrolledWindow)
+{
+	uint32_t GamesAvailable = 0;
+	GameStruct *GamesList = NULL;
+	
+	GUI_SetStatusBar("Refreshing...");
+	GUI_Flush();
+	Bool Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
+	
+	if (GamesAvailable)
+	{
+		if (!Changed)
+		{
+			GUI_SetStatusBar_GameCount(GamesAvailable);
+			return true;
+		}
+	}
+	
+	GUI_ClearGames(ScrolledWindow);
+	
+	if (GamesAvailable)
+	{
+		GUI_RenderGames(ScrolledWindow, GamesList, GamesAvailable);
+	}
+	else
+	{
+		GUI_NoGames(ScrolledWindow);
+	}
+	
+	GUI_SetStatusBar_GameCount(GamesAvailable);
+	
+	return true;
+}
+	
+	
 int main(int argc, char **argv)
 {
 	int Inc = 1;
-	char Server[512] = "lobby.wz2100.net";
-	int Port = 9990;
-	time_t Clock = 0;
-	struct tm *TimeStruct = NULL;
-	char TimeBuf[256];
-	Bool EnterKey = false;
 #ifdef WIN /*Fire up winsock2.*/
 	WSADATA WSAData;
 
@@ -34,16 +67,7 @@ int main(int argc, char **argv)
 	}
 #endif
 
-#ifdef WIN
-	system("title WZBlue");
-#else
-	const char *Term = getenv("TERM");
-	if (!strcmp(Term, "xterm") || !strcmp(Term, "rxvt"))
-	{
-		fputs("\033]0;WZBlue\a", stdout);
-	}
-#endif
-
+	
 	if (argc > 1)
 	{
 		for (; Inc < argc; ++Inc)
@@ -74,10 +98,6 @@ int main(int argc, char **argv)
 				puts("Arguments are --server=myserver.com, --port=9990, --enterkey, --refresh=30.");
 				exit(0);
 			}
-			else if (!strcmp(argv[Inc], "--enterkey"))
-			{
-				EnterKey = true;
-			}
 			else
 			{
 				fprintf(stderr, "Unknown command switch. Try --help.\n");
@@ -85,110 +105,18 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	uint32_t GamesAvailable = 0;
-	while (1)
-	{
-		GamesAvailable = 0;
-		GameStruct *GamesList = NULL;
-		Bool Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
-		
-		if (GamesAvailable)
-		{
-			if (!Changed) goto SkipPrinting;
-		}
-	/*lazy way to clear the screen.*/
-#ifdef WIN
-		system("cls");
-#else
-		system("clear");
-#endif
-		Clock = time(NULL);
-		
-		TimeStruct = localtime(&Clock);
-		strftime(TimeBuf, sizeof TimeBuf, "%Y-%m-%d %I:%M:%S %p", TimeStruct);
-		
-		printf("Last change was %s. ", TimeBuf); fflush(NULL); /*We don't leave a newline on purpose.*/
-		
-		if (GamesAvailable) WZ_SendGamesList(GamesList, GamesAvailable);
-		else puts("No games available.");
-		
-	SkipPrinting:
-		if (EnterKey)
-		{
-			
-			WZBlue_SetTextColor(GREEN);
-			puts("Strike enter to refresh.");
-			WZBlue_SetTextColor(ENDCOLOR);
-			getchar();
-		}
-		else
-		{	
-#ifdef WIN
-			Sleep(RefreshRate * 1000);
-#else
-			usleep(RefreshRate * 1000000);
-#endif
-		}
-	}
+	
+	//Start the GUI
+	gtk_init(&argc, &argv);
+	
+	GtkWidget *ScrolledWindow = GUI_InitGUI();
+	
+	g_timeout_add(RefreshRate * 1000, (GSourceFunc)Main_LoopFunc, ScrolledWindow);
+	
+	//Run it once.
+	Main_LoopFunc(ScrolledWindow);
+	
+	gtk_main();
+	
 	return 0;
-}
-
-void WZBlue_SetTextColor(ConsoleColor Color)
-{
-#ifndef WIN
-	printf("\033[%dm", Color);
-#else
-	BOOL (WINAPI *DoSetConsoleTextAttribute)(HANDLE, WORD) = NULL;
-	HANDLE WDescriptor = GetStdHandle(STD_OUTPUT_HANDLE);
-	static HMODULE kernel32 = (HMODULE)0xffffffff;
-	WORD WinColor = 0;
-	
-	if (kernel32 == 0)
-	{
-		return;
-	}
-	else if(kernel32 == (HMODULE)0xffffffff)
-	{
-		kernel32 = LoadLibrary("kernel32.dll");
-		
-		if (kernel32 == 0)
-		{
-			return;
-		}
-	}
-	
-	/*Not supported.*/
-	if (!(DoSetConsoleTextAttribute = (BOOL (WINAPI *)(HANDLE, WORD))GetProcAddress(kernel32, "SetConsoleTextAttribute"))) return;
-	
-	
-	switch (Color)
-	{
-		case BLACK:
-			WinColor = 0;
-			break;
-		case BLUE:
-			WinColor = 1;
-			break;
-		case GREEN:
-			WinColor = 2;
-			break;
-		case CYAN:
-			WinColor = 3;
-			break;
-		case RED:
-			WinColor = 4;
-			break;
-		case MAGENTA:
-			WinColor = 5;
-			break;
-		case YELLOW:
-			WinColor = 6;
-			break;
-		default: /*Everything else just becomes white.*/
-			WinColor = 7;
-			break;
-	}
-			
-	DoSetConsoleTextAttribute(WDescriptor, WinColor);
-#endif
 }

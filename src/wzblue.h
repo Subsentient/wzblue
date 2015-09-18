@@ -9,8 +9,12 @@ Public domain. By Subsentient, 2014.
 
 #define WZBLUE_VERSION "0.5"
 
-typedef signed char Bool;
-enum { false, true };
+#include <gtk/gtk.h>
+
+typedef gboolean Bool; //Because fuck you
+#define false FALSE
+#define true TRUE
+
 typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
 
 #include <stdint.h>
@@ -48,7 +52,7 @@ typedef struct
 } GameStruct;
 
 /*main.c*/
-void WZBlue_SetTextColor(ConsoleColor Color);
+gboolean Main_LoopFunc(GtkWidget *ScrolledWindow);
 
 /*netcore.c*/
 Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);
@@ -59,6 +63,15 @@ Bool Net_Write(int SockDescriptor, const char *InMsg);
 
 /*wz.c*/
 Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer);
-void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable);
+void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable, GtkWidget *ScrolledWindow);
+
+/*gui.c*/
+GtkWidget *GUI_InitGUI();
+void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t GamesAvailable);
+void GUI_ClearGames(GtkWidget *ScrolledWindow);
+void GUI_NoGames(GtkWidget *ScrolledWindow);
+void GUI_SetStatusBar(const char *Text);
+void GUI_SetStatusBar_GameCount(const uint32_t GamesAvailable);
+void GUI_Flush(void);
 
 #endif //__WZBLUE_H__
