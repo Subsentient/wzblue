@@ -16,6 +16,7 @@ struct GooeyGuts GuiInfo;
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
 static void GUI_LoadIcon(void);
+static void GUI_LaunchGame(const char *IP);
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
@@ -95,7 +96,7 @@ void GUI_DrawAboutDialog()
 
 	GtkWidget *Align = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
 	
-	GtkWidget *VBox = gtk_vbox_new(FALSE, 4);
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 5);
 	GtkWidget *Image = gtk_image_new_from_pixbuf(GuiInfo.IconPixbuf);
 	
 	gtk_container_add(GTK_CONTAINER(AboutWin), VBox);
@@ -105,6 +106,7 @@ void GUI_DrawAboutDialog()
 	snprintf(GTKVersion, sizeof GTKVersion, "Compiled against GTK %d.%d", GTK_MAJOR_VERSION, GTK_MINOR_VERSION);
 	
 	GtkWidget *Label2 = gtk_label_new(GTKVersion);
+	GtkWidget *Label3 = gtk_label_new("By Subsentient.");
 	
 	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	
@@ -112,7 +114,8 @@ void GUI_DrawAboutDialog()
 	
 	gtk_box_pack_start((GtkBox*)VBox, Image, TRUE, TRUE, 5);
 	gtk_box_pack_start((GtkBox*)VBox, Label1, TRUE, TRUE, 20);
-	gtk_box_pack_start((GtkBox*)VBox, Label2, TRUE, TRUE, 10);
+	gtk_box_pack_start((GtkBox*)VBox, Label2, TRUE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)VBox, Label3, TRUE, TRUE, 10);
 	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, FALSE, 0);
 	
 	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)GTK_NukeWidget, AboutWin);
@@ -212,8 +215,12 @@ GtkWidget *GUI_InitGUI()
 	GUI_SetStatusBar(NULL);
 	
 	//The refresh button, aligned to the right.
-	GtkWidget *Align = gtk_alignment_new(0.97, 0.5, 0.5, 0.01);
-	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
+	GtkWidget *Align = gtk_alignment_new(0.0, 0.5, 0.5, 0.01);
+	GtkWidget *Button1 = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
+	GtkWidget *Button2 = gtk_button_new_with_mnemonic("_Host Game");
+	GtkWidget *B2Image = gtk_image_new_from_stock(GTK_STOCK_NETWORK, GTK_ICON_SIZE_BUTTON);
+	
+	gtk_button_set_image((GtkButton*)Button2, (void*)B2Image);
 	
 	//The refresh delay slider
 	GtkWidget *RefreshSlider = GuiInfo.Slider = gtk_hscale_new_with_range(5.0, 120.0, 1.0);
@@ -232,13 +239,15 @@ GtkWidget *GUI_InitGUI()
 	gtk_box_pack_start((GtkBox*)BabyVBox, BabySep, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)BabyVBox, BabyLabel, FALSE, FALSE, 0);
 	
+
+	gtk_box_pack_start((GtkBox*)HBox, Button1, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, Button2, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)HBox, BabyVBox, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)HBox, Button, FALSE, FALSE, 0);
 	
 	gtk_container_add((GtkContainer*)Align, HBox);
 	
-	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)Main_LoopFunc, &False);
-	
+	g_signal_connect_swapped(G_OBJECT(Button1), "clicked", (GCallback)Main_LoopFunc, &False);
+	g_signal_connect_swapped(G_OBJECT(Button2), "clicked", (GCallback)GUI_LaunchGame, NULL);
 	
 	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, TRUE, 0);
 	gtk_box_pack_start((GtkBox*)VBox, StatusBar, FALSE, FALSE, 0);
@@ -258,7 +267,7 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 }
 
 static void GUI_LaunchGame(const char *IP)
-{
+{ //Null specifies we want to host.
 	pid_t PID = fork();
 	
 	if (PID == -1) return;
@@ -270,7 +279,14 @@ static void GUI_LaunchGame(const char *IP)
 		
 	}
 	char IPFormat[128] = "--join=";
-	strcat(IPFormat, IP);
+	if (IP == NULL)
+	{
+		strcpy(IPFormat, "--host");
+	}
+	else
+	{
+		strcat(IPFormat, IP);
+	}
 	
 	execlp("warzone2100", "warzone2100", IPFormat, NULL);
 	
