@@ -9,6 +9,7 @@ Public domain. By Subsentient, 2014.
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include "wzblue.h"
+#include "icon.h"
 
 static struct
 {
@@ -17,10 +18,12 @@ static struct
 	GtkWidget *ScrolledWindow;
 	guint StatusBarContextID;
 	GtkWidget *VBox;
+	GdkPixbuf *IconPixbuf;
 } GuiInfo;
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
+static void GUI_LoadIcon(void);
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
@@ -28,6 +31,16 @@ static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 	exit(0);
 }
 
+static void GUI_LoadIcon(void)
+{
+	GdkPixbufLoader *Loader = gdk_pixbuf_loader_new();
+	
+	gdk_pixbuf_loader_write(Loader, WZBlueIcon_Data, sizeof WZBlueIcon_Data, NULL);
+	GuiInfo.IconPixbuf = gdk_pixbuf_loader_get_pixbuf(Loader);
+	
+	gtk_window_set_icon((GtkWindow*)GuiInfo.Win, GuiInfo.IconPixbuf);
+}
+	
 void GTK_NukeWidget(GtkWidget *Widgy)
 {
 	gtk_widget_destroy(Widgy);
@@ -76,7 +89,9 @@ void GUI_DrawAboutDialog()
 
 	GtkWidget *Align = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
 	
-	GtkWidget *VBox = gtk_vbox_new(FALSE, 3);
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 4);
+	GtkWidget *Image = gtk_image_new_from_pixbuf(GuiInfo.IconPixbuf);
+	
 	gtk_container_add(GTK_CONTAINER(AboutWin), VBox);
 	
 	GtkWidget *Label1 = gtk_label_new("WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION);
@@ -89,6 +104,7 @@ void GUI_DrawAboutDialog()
 	
 	gtk_container_add(GTK_CONTAINER(Align), Button);
 	
+	gtk_box_pack_start((GtkBox*)VBox, Image, TRUE, TRUE, 5);
 	gtk_box_pack_start((GtkBox*)VBox, Label1, TRUE, TRUE, 20);
 	gtk_box_pack_start((GtkBox*)VBox, Label2, TRUE, TRUE, 10);
 	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, FALSE, 0);
@@ -152,6 +168,7 @@ void GUI_DrawMenus()
 GtkWidget *GUI_InitGUI()
 {
 	GtkWidget *Win = GuiInfo.Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	GUI_LoadIcon();
 	
 	//Connect the destroy signal to allow quitting when we close the window.
 	g_signal_connect(G_OBJECT(Win), "destroy", G_CALLBACK(GTK_Destroy), NULL);
@@ -172,7 +189,7 @@ GtkWidget *GUI_InitGUI()
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrolledWindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	
 	gtk_widget_set_size_request(ScrolledWindow, 700, 400);
-	gtk_container_set_border_width(GTK_CONTAINER(ScrolledWindow), 20);
+	gtk_container_set_border_width(GTK_CONTAINER(ScrolledWindow), 5);
 	
 	
 	///Add to the main vertical box.
