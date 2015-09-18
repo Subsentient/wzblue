@@ -101,8 +101,8 @@ void GUI_DrawMenus()
 	GtkAccelGroup *AccelGroup = gtk_accel_group_new();
 	
 	//File and help tags
-	GtkWidget *FileTag = gtk_menu_item_new_with_label("File");
-	GtkWidget *HelpTag = gtk_menu_item_new_with_label("Help");
+	GtkWidget *FileTag = gtk_menu_item_new_with_mnemonic("_File");
+	GtkWidget *HelpTag = gtk_menu_item_new_with_mnemonic("_Help");
 	
 	//The submenus for file and help.
 	GtkWidget *FileMenu = gtk_menu_new();
@@ -158,7 +158,7 @@ GtkWidget *GUI_InitGUI()
 	gtk_window_set_resizable((GtkWindow*)Win, false);
 
 	//Create the main vertical box.
-	GtkWidget *VBox = GuiInfo.VBox = gtk_vbox_new(FALSE, 5); //One for menu, one for status, one for games list.
+	GtkWidget *VBox = GuiInfo.VBox = gtk_vbox_new(FALSE, 6); //One for menu, one for status, one for games list.
 	gtk_container_add((GtkContainer*)Win, VBox);
 	
 	//Create a scrolled window.
@@ -181,6 +181,15 @@ GtkWidget *GUI_InitGUI()
 	//Mostly here because I wanna make sure it works
 	GUI_SetStatusBar(NULL);
 	
+	//The refresh button, aligned to the right.
+	GtkWidget *Align = gtk_alignment_new(0.97, 0.5, 0.05, 0.01);
+	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
+	gtk_container_add((GtkContainer*)Align, Button);
+	
+	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)Main_LoopFunc, GuiInfo.ScrolledWindow);
+	
+	
+	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, TRUE, 0);
 	gtk_box_pack_start((GtkBox*)VBox, StatusBar, FALSE, FALSE, 0);
 	
 	gtk_widget_show_all(Win);
@@ -219,17 +228,10 @@ static void GTK_NukeContainerChildren(GtkContainer *Container)
 
 void GUI_NoGames(GtkWidget *ScrolledWindow)
 {
-	GtkWidget *VBox = gtk_vbox_new(false, 2); //Becauseit wants a container.
-	GtkWidget *Align = gtk_alignment_new(0.5, 0.5, 0.07, 1.0);
-	GtkWidget *Button = gtk_button_new_with_label("Refresh");
-	
-	gtk_container_add((GtkContainer*)Align, Button);
+	GtkWidget *VBox = gtk_vbox_new(false, 1); //Because it wants a container.
 	
 	GtkWidget *Label = gtk_label_new("No games available.");
 	gtk_box_pack_start(GTK_BOX(VBox), Label, FALSE, FALSE, 20);
-	gtk_box_pack_start(GTK_BOX(VBox), Align, FALSE, FALSE, 0);
-	
-	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)Main_LoopFunc, GuiInfo.ScrolledWindow);
 	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(ScrolledWindow), VBox);
 	gtk_widget_show_all(ScrolledWindow);
