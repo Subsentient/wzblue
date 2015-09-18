@@ -11,15 +11,7 @@ Public domain. By Subsentient, 2014.
 #include "wzblue.h"
 #include "icon.h"
 
-static struct
-{
-	GtkWidget *StatusBar;
-	GtkWidget *Win;
-	GtkWidget *ScrolledWindow;
-	guint StatusBarContextID;
-	GtkWidget *VBox;
-	GdkPixbuf *IconPixbuf;
-} GuiInfo;
+struct GooeyGuts GuiInfo;
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
@@ -30,6 +22,20 @@ static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 	gtk_main_quit();
 	exit(0);
 }
+
+gboolean GUI_CheckSlider(void)
+{
+	const unsigned NewRate = gtk_range_get_value((GtkRange*)GuiInfo.Slider);
+	if (RefreshRate != NewRate)
+	{
+		RefreshRate = NewRate;
+		return true; //Value changed.
+	}
+	
+	return false;
+
+}
+	
 
 static void GUI_LoadIcon(void)
 {
@@ -146,7 +152,8 @@ void GUI_DrawMenus()
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
 	g_signal_connect(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, NULL);
-	g_signal_connect_swapped(G_OBJECT(Item_Refresh), "activate", (GCallback)Main_LoopFunc, GuiInfo.ScrolledWindow);
+	
+	g_signal_connect_swapped(G_OBJECT(Item_Refresh), "activate", (GCallback)Main_LoopFunc, &False);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(HelpMenu), Item_About);
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Refresh);
@@ -205,11 +212,32 @@ GtkWidget *GUI_InitGUI()
 	GUI_SetStatusBar(NULL);
 	
 	//The refresh button, aligned to the right.
-	GtkWidget *Align = gtk_alignment_new(0.97, 0.5, 0.05, 0.01);
+	GtkWidget *Align = gtk_alignment_new(0.97, 0.5, 0.5, 0.01);
 	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
-	gtk_container_add((GtkContainer*)Align, Button);
 	
-	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)Main_LoopFunc, GuiInfo.ScrolledWindow);
+	//The refresh delay slider
+	GtkWidget *RefreshSlider = GuiInfo.Slider = gtk_hscale_new_with_range(5.0, 120.0, 1.0);
+	gtk_scale_set_digits((GtkScale*)RefreshSlider, 0);
+	gtk_scale_set_value_pos((GtkScale*)RefreshSlider, GTK_POS_LEFT);
+	gtk_range_set_value((GtkRange*)RefreshSlider, RefreshRate);
+	
+	GtkWidget *HBox = gtk_hbox_new(FALSE, 4);
+	
+	//Baby vbox
+	GtkWidget *BabyVBox = gtk_vbox_new(FALSE, 3);
+	GtkWidget *BabyLabel = gtk_label_new("Auto-Refresh delay in seconds");
+	GtkWidget *BabySep = gtk_hseparator_new();
+	
+	gtk_box_pack_start((GtkBox*)BabyVBox, RefreshSlider, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)BabyVBox, BabySep, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)BabyVBox, BabyLabel, FALSE, FALSE, 0);
+	
+	gtk_box_pack_start((GtkBox*)HBox, BabyVBox, TRUE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, Button, FALSE, FALSE, 0);
+	
+	gtk_container_add((GtkContainer*)Align, HBox);
+	
+	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)Main_LoopFunc, &False);
 	
 	
 	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, TRUE, 0);
@@ -229,6 +257,26 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 	GTK_NukeContainerChildren((GtkContainer*)ScrolledWindow);
 }
 
+static void GUI_LaunchGame(const char *IP)
+{
+	pid_t PID = fork();
+	
+	if (PID == -1) return;
+	
+	if (PID != 0)
+	{
+		signal(SIGCHLD, SIG_IGN);
+		return;
+		
+	}
+	char IPFormat[128] = "--join=";
+	strcat(IPFormat, IP);
+	
+	execlp("warzone2100", "warzone2100", IPFormat, NULL);
+	
+	return;
+	
+}
 static void GTK_NukeContainerChildren(GtkContainer *Container)
 {
 	GList *Children = gtk_container_get_children(Container);
@@ -262,6 +310,11 @@ void GUI_NoGames(GtkWidget *ScrolledWindow)
 
 void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t GamesAvailable)
 {
+	static void *FreeAfterRender[64];
+	
+	//We want it static so that it persists when this function returns, but we still need to wipe it each call.
+	memset(FreeAfterRender, 0, sizeof FreeAfterRender);
+	
 	if (!ScrolledWindow || !GamesList || !GamesAvailable) return;
 	
 	GtkWidget *VBox = gtk_vbox_new(false, (GamesAvailable * 2) - 1);
@@ -314,6 +367,22 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		GtkWidget *Align = gtk_alignment_new(1.0, 0.0, 0.07, 1.0);
 		
 		GtkWidget *Button = gtk_button_new_with_label("Join");
+		
+		
+		//Add a temporary pointer to our temporary pointer list
+		void *Ptr = NULL;
+		for (guint Inc = 0; Inc < 64; ++Inc)
+		{
+			if (FreeAfterRender[Inc] == NULL)
+			{
+				FreeAfterRender[Inc] = Ptr = strdup(GamesList[Inc].NetSpecs.HostIP);
+				break;
+			}
+		}
+		
+		if (Ptr == NULL) Ptr = "";
+		
+		g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)GUI_LaunchGame, Ptr);
 		
 		if (GamesList[Inc].NetSpecs.CurPlayers == GamesList[Inc].NetSpecs.MaxPlayers)
 		{

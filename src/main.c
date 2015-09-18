@@ -14,15 +14,20 @@ Public domain. By Subsentient, 2014.
 #include <windows.h>
 #endif
 
-static unsigned RefreshRate = 5; /*5 secs lobby refresh delay.*/
+unsigned RefreshRate = 10; /*10 sec refresh by default*/
 static char Server[128] = "lobby.wz2100.net"; //The lobby server hostname.
 static int Port = 9990;
+
+gboolean True = true, False = false;
 //Prototypes
 
-gboolean Main_LoopFunc(GtkWidget *ScrolledWindow)
+static void Main_CheckLoop(void);
+
+gboolean Main_LoopFunc(gboolean *ViaLoop)
 {
 	uint32_t GamesAvailable = 0;
 	GameStruct *GamesList = NULL;
+	gboolean RetVal = true;
 	
 	GUI_SetStatusBar("Refreshing...");
 	GUI_Flush();
@@ -33,24 +38,24 @@ gboolean Main_LoopFunc(GtkWidget *ScrolledWindow)
 		if (!Changed)
 		{
 			GUI_SetStatusBar_GameCount(GamesAvailable);
-			return true;
+			return RetVal;
 		}
 	}
 	
-	GUI_ClearGames(ScrolledWindow);
+	GUI_ClearGames(GuiInfo.ScrolledWindow);
 	
 	if (GamesAvailable)
 	{
-		GUI_RenderGames(ScrolledWindow, GamesList, GamesAvailable);
+		GUI_RenderGames(GuiInfo.ScrolledWindow, GamesList, GamesAvailable);
 	}
 	else
 	{
-		GUI_NoGames(ScrolledWindow);
+		GUI_NoGames(GuiInfo.ScrolledWindow);
 	}
 	
 	GUI_SetStatusBar_GameCount(GamesAvailable);
 	
-	return true;
+	return RetVal;
 }
 	
 	
@@ -109,14 +114,34 @@ int main(int argc, char **argv)
 	//Start the GUI
 	gtk_init(&argc, &argv);
 	
-	GtkWidget *ScrolledWindow = GUI_InitGUI();
+	GUI_InitGUI();
 	
-	g_timeout_add(RefreshRate * 1000, (GSourceFunc)Main_LoopFunc, ScrolledWindow);
+	//Every second
+	g_timeout_add(1000, (GSourceFunc)Main_CheckLoop, NULL);
 	
 	//Run it once.
-	Main_LoopFunc(ScrolledWindow);
+	Main_LoopFunc(&False);
 	
 	gtk_main();
 	
 	return 0;
 }
+
+static void Main_CheckLoop(void)
+{
+	static unsigned Counter = 0;
+	
+	GUI_CheckSlider();
+	
+	if (Counter >= RefreshRate)
+	{
+		Counter = 0;
+		Main_LoopFunc(&True);
+	}
+	
+	++Counter;
+}
+
+	
+	
+	

@@ -15,6 +15,7 @@ typedef gboolean Bool; //Because fuck you
 #define false FALSE
 #define true TRUE
 
+#define NUMELEMENTS(x) (sizeof x / sizeof *x)
 typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
 
 #include <stdint.h>
@@ -51,8 +52,24 @@ typedef struct
 	uint32_t Unused3;
 } GameStruct;
 
+struct GooeyGuts
+{
+	GtkWidget *StatusBar;
+	GtkWidget *Win;
+	GtkWidget *ScrolledWindow;
+	guint StatusBarContextID;
+	GtkWidget *VBox;
+	GdkPixbuf *IconPixbuf;
+	GtkWidget *Slider;
+};
+
+
+//Globals
+extern unsigned RefreshRate;
+extern struct GooeyGuts GuiInfo;
+extern gboolean True, False;
 /*main.c*/
-gboolean Main_LoopFunc(GtkWidget *ScrolledWindow);
+gboolean Main_LoopFunc(gboolean *ViaLoop);
 
 /*netcore.c*/
 Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);
@@ -73,5 +90,6 @@ void GUI_NoGames(GtkWidget *ScrolledWindow);
 void GUI_SetStatusBar(const char *Text);
 void GUI_SetStatusBar_GameCount(const uint32_t GamesAvailable);
 void GUI_Flush(void);
+gboolean GUI_CheckSlider(void);
 
 #endif //__WZBLUE_H__
