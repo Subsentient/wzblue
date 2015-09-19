@@ -198,7 +198,7 @@ GtkWidget *GUI_InitGUI()
 	GtkWidget *ScrolledWindow = GuiInfo.ScrolledWindow = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrolledWindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	
-	gtk_widget_set_size_request(ScrolledWindow, 700, 400);
+	gtk_widget_set_size_request(ScrolledWindow, 800, 400);
 	gtk_container_set_border_width(GTK_CONTAINER(ScrolledWindow), 5);
 	
 	
