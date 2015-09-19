@@ -197,7 +197,7 @@ GtkWidget *GUI_InitGUI()
 	//Create a scrolled window.
 	GtkWidget *ScrolledWindow = GuiInfo.ScrolledWindow = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrolledWindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	
+
 	gtk_widget_set_size_request(ScrolledWindow, 800, 400);
 	gtk_container_set_border_width(GTK_CONTAINER(ScrolledWindow), 5);
 	
@@ -371,20 +371,24 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		/*Add mod warning even if we don't get the color for that.*/
 		if (GamesList[Inc].ModList[0] != '\0')
 		{
-			snprintf(ModString, sizeof ModString, " (mods: %s)",  GamesList[Inc].ModList);
+			snprintf(ModString, sizeof ModString, " <b><span foreground=\"red\">(mods: %s)</span></b>",  GamesList[Inc].ModList);
 		}
 		
 		
-		snprintf(OutBuf, sizeof OutBuf, "Name: %s | Map: %s%s | Host: %s\n"
-				"Players: %d/%d %s| IP: %s | Version: %s%s",
-				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " (map-mod)" : "",
+		snprintf(OutBuf, sizeof OutBuf, "Name: <b><span foreground=\"blue\">%s</span></b> | "
+									"Map: <b><span foreground=\"#00cd00\">%s</span></b>%s | "
+									"Host: <b><span foreground=\"#cc00cc\">%s</span></b>\n"
+									"Players: <b>%d/%d</b> %s| IP: %s | Version: <b><span foreground=\"#cc00cc\">%s</span></b>%s",
+				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
 				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
-				GamesList[Inc].PrivateGame ? "(private) " : "", GamesList[Inc].NetSpecs.HostIP,
+				GamesList[Inc].PrivateGame ? "<b><span foreground=\"#cece00\">(private)</span></b> " : "", GamesList[Inc].NetSpecs.HostIP,
 				GamesList[Inc].VersionString, ModString);
 				
 		GtkWidget *Icon = gtk_image_new_from_stock(StockID, GTK_ICON_SIZE_BUTTON);
 		
-		GtkWidget *Label = gtk_label_new(OutBuf);
+		GtkWidget *Label = gtk_label_new("");
+		gtk_label_set_markup((GtkLabel*)Label, OutBuf);
+		
 		GtkWidget *Button = gtk_button_new_with_label("Join");
 		
 		
@@ -423,12 +427,12 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		gtk_box_pack_start(GTK_BOX(HBox), HBox2, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), Label, FALSE, FALSE, 0);
 
-
 		gtk_box_pack_start(GTK_BOX(VBox), HBox, FALSE, FALSE, 0);
 
 		gtk_box_pack_start(GTK_BOX(VBox), gtk_hseparator_new(), FALSE, FALSE, 0);
-		
+
 	}
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(ScrolledWindow), VBox);
+	
 	gtk_widget_show_all(ScrolledWindow);
 }
