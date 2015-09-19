@@ -329,6 +329,11 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	static void *FreeAfterRender[64];
 	
 	//We want it static so that it persists when this function returns, but we still need to wipe it each call.
+	for (int Inc = 0; Inc < 64 && FreeAfterRender[Inc] != NULL; ++Inc)
+	{
+		free(FreeAfterRender[Inc]);
+	}
+	
 	memset(FreeAfterRender, 0, sizeof FreeAfterRender);
 	
 	if (!ScrolledWindow || !GamesList || !GamesAvailable) return;
