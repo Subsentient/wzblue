@@ -2,7 +2,9 @@
 //
 // Version
 //
-
+#define MANIFEST_RESOURCE_ID 1
+#define RT_MANIFEST 24
+MANIFEST_RESOURCE_ID RT_MANIFEST "wzblue.manifest"
 1 VERSIONINFO
  FILEVERSION 3,0,99,11
  PRODUCTVERSION 3,0,99,11
@@ -15,6 +17,7 @@
  FILEOS 0x40004L
  FILETYPE 0x1L
  FILESUBTYPE 0x0L
+
 BEGIN
 	BLOCK "StringFileInfo"
 	BEGIN
@@ -28,12 +31,14 @@ BEGIN
 			VALUE "OriginalFilename", "wzblue.exe"
 			VALUE "ProductName", "WZBlue lobby monitor"
 			VALUE "ProductVersion", "0.5"
+			
 		END
 	END
 	BLOCK "VarFileInfo"
 	BEGIN
 		VALUE "Translation", 0x0409, 0x04b0
 	END
+
 END
 
 
