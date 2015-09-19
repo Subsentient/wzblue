@@ -12,6 +12,7 @@ Public domain. By Subsentient, 2014.
 #include "wzblue.h"
 #ifdef WIN
 #include <windows.h>
+#include <commctrl.h>
 #endif
 
 unsigned RefreshRate = 10; /*10 sec refresh by default*/
@@ -70,6 +71,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "Unable to initialize WinSock2!");
         exit(1);
 	}
+	
+	INITCOMMONCONTROLSEX ICC;
+	ICC.dwSize = sizeof(ICC);
+	ICC.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&ICC);
 #endif
 
 	

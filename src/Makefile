@@ -1,10 +1,12 @@
 GTKCHOICE = 2
-CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `pkg-config --cflags --libs gtk+-$(GTKCHOICE).0`
+PKGCONFIG = pkg-config
+CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags --libs gtk+-$(GTKCHOICE).0`
+
 OUTFILE = ../wzblue
 OBJECTS = wz.c netcore.c main.c gui.c
 
 ifeq ($(OS),WIN)
-	CFLAGS += -lws2_32 -DWIN
+	CFLAGS += -lcomctl32 -lws2_32 -DWIN -mwindows
 	OUTFILE = ../wzblue.exe
 	OBJECTS += ../win32/win.o
 endif

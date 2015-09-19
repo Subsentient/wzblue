@@ -8,8 +8,15 @@ Public domain. By Subsentient, 2014.
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <sys/stat.h>
 #include "wzblue.h"
 #include "icon.h"
+
+#ifdef WIN
+#include <windows.h>
+#include <dirent.h>
+#include <tchar.h>
+#endif //WIN
 
 struct GooeyGuts GuiInfo;
 
@@ -17,6 +24,11 @@ static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
 static void GUI_LoadIcon(void);
 static void GUI_LaunchGame(const char *IP);
+static void GUI_DrawLaunchFailure(void);
+
+#ifdef WIN
+static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
+#endif //WIN
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
@@ -50,6 +62,7 @@ static void GUI_LoadIcon(void)
 	
 void GTK_NukeWidget(GtkWidget *Widgy)
 {
+	GTK_NukeContainerChildren((GtkContainer*)Widgy);
 	gtk_widget_destroy(Widgy);
 }
 
@@ -268,9 +281,14 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 
 static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
+#ifndef WIN
 	pid_t PID = fork();
 	
-	if (PID == -1) return;
+	if (PID == -1)
+	{
+		GUI_DrawLaunchFailure();
+		return;
+	}
 	
 	if (PID != 0)
 	{
@@ -290,9 +308,114 @@ static void GUI_LaunchGame(const char *IP)
 	
 	execlp("warzone2100", "warzone2100", IPFormat, NULL);
 	
+#else //WINDOWS CODE!!
+    STARTUPINFO StartupInfo;
+    PROCESS_INFORMATION ProcessInfo;
+    
+    memset(&StartupInfo, 0, sizeof StartupInfo);
+    memset(&ProcessInfo, 0, sizeof ProcessInfo);
+    
+    StartupInfo.cb = sizeof StartupInfo;
+    
+    char IPFormat[128] = "--join=";
+    char WZExecutable[2048];
+    
+    if (!GUI_FindWZExecutable(WZExecutable, sizeof WZExecutable))
+    {
+		GUI_DrawLaunchFailure();
+		return;
+    }
+	if (IP == NULL)
+	{
+		strcpy(IPFormat, "--host");
+	}
+	else
+	{
+		strcat(IPFormat, IP);
+	}
+	
+	strcat(WZExecutable, " ");
+	strcat(WZExecutable, IPFormat);
+	
+	//Launch it
+	const gboolean Worked = CreateProcess(NULL, WZExecutable, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
+	
+	CloseHandle(ProcessInfo.hProcess);
+	CloseHandle(ProcessInfo.hThread);
+    
+	if (!Worked) GUI_DrawLaunchFailure();
+#endif //WIN
 	return;
 	
 }
+
+static void GUI_DrawLaunchFailure(void)
+{
+	GtkWidget *Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	
+	gtk_window_set_title((GtkWindow*)Win, "Failed to launch Warzone");
+	
+	gtk_widget_set_size_request(Win, -1, -1);
+	
+	gtk_window_set_resizable((GtkWindow*)Win, false);
+	
+	GtkWidget *Table = gtk_table_new(2, 2, FALSE);
+	
+	gtk_container_add((GtkContainer*)Win, Table);
+	
+	GtkWidget *Label = gtk_label_new("Failed to launch Warzone 2100! Make sure it's installed?");
+	GtkWidget *FailIcon = gtk_image_new_from_stock(GTK_STOCK_DIALOG_ERROR, GTK_ICON_SIZE_DIALOG);
+	GtkWidget *OkButton = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
+	
+	g_signal_connect_swapped(G_OBJECT(OkButton), "clicked", (GCallback)GTK_NukeWidget, Win);
+	
+	gtk_table_attach(GTK_TABLE(Table), Label, 1, 2, 0, 1, GTK_EXPAND, GTK_SHRINK, 10, 20);
+	gtk_table_attach(GTK_TABLE(Table), FailIcon, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 10, 20);
+	gtk_table_attach(GTK_TABLE(Table), OkButton, 0, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 10);
+	
+	gtk_widget_show_all(Win);
+}
+#ifdef WIN
+static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
+{
+	const char *ProgDir = getenv("programfiles");
+	puts(ProgDir);
+	DIR *Folder = opendir(ProgDir);
+	struct dirent *File = NULL;
+	
+	while ((File = readdir(Folder)))
+	{
+		char Filename[256];
+		
+		strncpy(Filename, File->d_name, sizeof Filename - 1);
+		Filename[sizeof Filename - 1] = '\0';
+		*Filename = tolower(*Filename);
+		if (!strncmp(Filename, "warzone", sizeof "warzone" - 1))
+		{
+			//We found the folder! Build our new pathname!
+			char NewPath[1024];
+			
+			snprintf(NewPath, sizeof NewPath, "%s\\%s\\warzone2100.exe", ProgDir, File->d_name);
+			
+			struct stat Stat;
+			
+			if (stat(NewPath, &Stat) == 0)
+			{
+				strncpy(Out, NewPath, OutMaxSize - 1);
+				Out[OutMaxSize - 1] = '\0';
+				
+				closedir(Folder);
+				return true;
+			}
+		}
+	}
+	
+	closedir(Folder);
+	*Out = '\0';
+	return false;
+}
+#endif //WIN
+
 static void GTK_NukeContainerChildren(GtkContainer *Container)
 {
 	GList *Children = gtk_container_get_children(Container);
