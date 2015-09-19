@@ -380,8 +380,6 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		GtkWidget *Icon = gtk_image_new_from_stock(StockID, GTK_ICON_SIZE_BUTTON);
 		
 		GtkWidget *Label = gtk_label_new(OutBuf);
-		GtkWidget *Align = gtk_alignment_new(1.0, 0.0, 0.07, 1.0);
-		
 		GtkWidget *Button = gtk_button_new_with_label("Join");
 		
 		
@@ -409,18 +407,17 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		GtkWidget *HBox = gtk_hbox_new(false, 4);
 		GtkWidget *HBox2 = gtk_hbox_new(false, 2);
 		
-		gtk_container_add((GtkContainer*)Align, HBox2);
-		
 		
 		GtkWidget *VSep = gtk_vseparator_new(), *VSep2 = gtk_vseparator_new();
 		
-		gtk_box_pack_start(GTK_BOX(HBox2), VSep2, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox2), Button, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox2), VSep2, FALSE, FALSE, 0);
 		
 		gtk_box_pack_start(GTK_BOX(HBox), Icon, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), VSep, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox), HBox2, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), Label, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(HBox), Align, TRUE, TRUE, 0);
+
 
 		gtk_box_pack_start(GTK_BOX(VBox), HBox, FALSE, FALSE, 0);
 
