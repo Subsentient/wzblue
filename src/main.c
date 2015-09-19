@@ -18,7 +18,7 @@ Public domain. By Subsentient, 2014.
 unsigned RefreshRate = 10; /*10 sec refresh by default*/
 static char Server[128] = "lobby.wz2100.net"; //The lobby server hostname.
 static int Port = 9990;
-
+static unsigned Counter = 0;
 gboolean True = true, False = false;
 //Prototypes
 
@@ -29,6 +29,8 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	uint32_t GamesAvailable = 0;
 	GameStruct *GamesList = NULL;
 	gboolean RetVal = true;
+	
+	if (!*ViaLoop) Counter = 0;
 	
 	GUI_SetStatusBar("Refreshing...");
 	GUI_Flush();
@@ -134,9 +136,7 @@ int main(int argc, char **argv)
 }
 
 static void Main_CheckLoop(void)
-{
-	static unsigned Counter = 0;
-	
+{	
 	GUI_CheckSlider();
 	
 	if (Counter >= RefreshRate)
