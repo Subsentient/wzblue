@@ -199,7 +199,7 @@ GtkWidget *GUI_InitGUI()
 	g_signal_connect(G_OBJECT(Win), "destroy", G_CALLBACK(GTK_Destroy), NULL);
 	
 	//Window title
-	gtk_window_set_title(GTK_WINDOW(Win), "WZBlue " WZBLUE_VERSION);
+	gtk_window_set_title(GTK_WINDOW(Win), "WZBlue");
 	
 	gtk_widget_set_size_request(Win, -1, -1);
 	
