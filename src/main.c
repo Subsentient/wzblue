@@ -100,16 +100,10 @@ int main(int argc, char **argv)
 					exit(1);
 				}
 			}
-			else if (!strncmp(argv[Inc], "--refresh=", sizeof "--refresh=" - 1))
-			{
-				unsigned NewRefresh = atoi(argv[Inc] + (sizeof "--refresh=" - 1));
-				
-				RefreshRate = NewRefresh;
-			}
 			else if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{
 				puts("WZBlue version " WZBLUE_VERSION);
-				puts("Arguments are --server=myserver.com, --port=9990, --enterkey, --refresh=30.");
+				puts("Arguments are --server=myserver.com, --port=9990");
 				exit(0);
 			}
 			else
