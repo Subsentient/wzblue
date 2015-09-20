@@ -311,6 +311,9 @@ static void GUI_LaunchGame(const char *IP)
 	
 	//Check if the executable exists.
 	const char *Path = getenv("PATH");
+	
+	if (!Path) exit(1);
+	
 	char Name[1024];
 	const char *Worker = Path;
 	
