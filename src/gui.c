@@ -109,29 +109,29 @@ void GUI_DrawAboutDialog()
 	
 	g_signal_connect(G_OBJECT(AboutWin), "destroy", (GCallback)GTK_NukeWidget, NULL);
 
-	GtkWidget *Align = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
+	GtkWidget *ButtonAlign = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
 	
 	GtkWidget *VBox = gtk_vbox_new(FALSE, 5);
 	GtkWidget *Image = gtk_image_new_from_pixbuf(GuiInfo.IconPixbuf);
 	
 	gtk_container_add(GTK_CONTAINER(AboutWin), VBox);
+	char AboutString[2048];
 	
-	GtkWidget *Label1 = gtk_label_new("WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION);
-	char GTKVersion[64];
-	snprintf(GTKVersion, sizeof GTKVersion, "Compiled against GTK %d.%d", GTK_MAJOR_VERSION, GTK_MINOR_VERSION);
-	
-	GtkWidget *Label2 = gtk_label_new(GTKVersion);
-	GtkWidget *Label3 = gtk_label_new("By Subsentient.");
+	snprintf(AboutString, sizeof AboutString, "WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION "\n"
+										"Compiled against GTK %d.%d\n\n"
+										"By Subsentient.", GTK_MAJOR_VERSION, GTK_MINOR_VERSION);
 	
 	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_OK);
+	GtkWidget *Label = gtk_label_new(AboutString);
+	GtkWidget *LabelAlign = gtk_alignment_new(0.5, 0.5, 0.1, 0.1);
+	gtk_container_add((GtkContainer*)LabelAlign, Label);
 	
-	gtk_container_add(GTK_CONTAINER(Align), Button);
+	gtk_container_add(GTK_CONTAINER(ButtonAlign), Button);
 	
 	gtk_box_pack_start((GtkBox*)VBox, Image, TRUE, TRUE, 5);
-	gtk_box_pack_start((GtkBox*)VBox, Label1, TRUE, TRUE, 20);
-	gtk_box_pack_start((GtkBox*)VBox, Label2, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)VBox, Label3, TRUE, TRUE, 10);
-	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)VBox, LabelAlign, TRUE, TRUE, 10);
+
+	gtk_box_pack_start((GtkBox*)VBox, ButtonAlign, TRUE, FALSE, 0);
 	
 	g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)GTK_NukeWidget, AboutWin);
 	
