@@ -29,9 +29,8 @@ static void GUI_LoadIcon(void);
 static void GUI_LaunchGame(const char *IP);
 static void GUI_DrawLaunchFailure(void);
 
-#ifdef WIN
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
-#endif //WIN
+
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
@@ -285,82 +284,40 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
 #ifndef WIN
-	pid_t WatcherPID = fork();
+
+	char WZExecutable[2048];
+    
+    if (!GUI_FindWZExecutable(WZExecutable, sizeof WZExecutable))
+    {
+		GUI_DrawLaunchFailure();
+		return;
+    }
 	
-	if (WatcherPID == -1)
+	pid_t PID = fork();
+	
+	if (PID == -1)
 	{
 		GUI_DrawLaunchFailure();
 		return;
 	}
 	
-	if (WatcherPID != 0)
+	if (PID != 0)
 	{
-		int ExitCode = 0;
-		waitpid(WatcherPID, &ExitCode, 0);
-		
-		if (WEXITSTATUS(ExitCode) != 0)
-		{
-			GUI_DrawLaunchFailure();
-		}
-		
+		signal(SIGCHLD, SIG_IGN);
 		return;
 	}
-	
-	///Watcher does this stuff.
-	
-	
-	//Check if the executable exists.
-	const char *Path = getenv("PATH");
-	
-	if (!Path) exit(1);
-	
-	char Name[1024];
-	const char *Worker = Path;
-	
-	do
-	{
-		unsigned Inc = 0;
-		
-		if (*Worker == ':') ++Worker;
-		
-		for (; Inc < (sizeof Name - 1 - (sizeof "/warzone2100" - 1)) &&
-				Worker[Inc] != ':' && Worker[Inc] != '\0'; ++Inc)
-		{
-			Name[Inc] = Worker[Inc];
-		}
-		Name[Inc] = '\0';
-		
-		strcat(Name, "/warzone2100");
-		
-		struct stat FileStat;
-		
-		if (stat(Name, &FileStat) == 0)
-		{
-			signal(SIGCHLD, SIG_IGN);				
-			pid_t GamePID = fork();
-			
-			if (GamePID == -1) exit(1);
-			
-			if (GamePID != 0)
-			{ //It worked.
-				exit(0);
-			}
 
-			char IPFormat[128] = "--join=";
-			if (IP == NULL)
-			{
-				strcpy(IPFormat, "--host");
-			}
-			else
-			{
-				strcat(IPFormat, IP);
-			}
-			
-			execlp("warzone2100", "warzone2100", IPFormat, NULL);
-			
-			exit(1);
-		}
-	} while ((Worker = strchr(Worker, ':')) != NULL);
+	char IPFormat[128] = "--join=";
+	if (IP == NULL)
+	{
+		strcpy(IPFormat, "--host");
+	}
+	else
+	{
+		strcat(IPFormat, IP);
+	}
+	
+	execlp(WZExecutable, "warzone2100", IPFormat, NULL);
 	
 	exit(1);
 
@@ -431,9 +388,47 @@ static void GUI_DrawLaunchFailure(void)
 	
 	gtk_widget_show_all(Win);
 }
-#ifdef WIN
+
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 {
+#ifndef WIN
+	const char *Path = getenv("PATH");
+	
+	if (!Path) exit(1);
+	
+	char Name[1024];
+	const char *Worker = Path;
+	
+	do
+	{
+		unsigned Inc = 0;
+		
+		if (*Worker == ':') ++Worker;
+		
+		for (; Inc < (sizeof Name - 1 - (sizeof "/warzone2100" - 1)) &&
+				Worker[Inc] != ':' && Worker[Inc] != '\0'; ++Inc)
+		{
+			Name[Inc] = Worker[Inc];
+		}
+		Name[Inc] = '\0';
+		
+		strcat(Name, "/warzone2100");
+		
+		struct stat FileStat;
+		//Check if the executable exists.
+		
+		if (stat(Name, &FileStat) == 0)
+		{
+			strncpy(Out, Name, OutMaxSize - 1);
+			Out[OutMaxSize - 1] = '\0';
+			return true;
+		}
+	} while ((Worker = strchr(Worker, ':')) != NULL);
+	
+	*Out = '\0';
+	
+	return false;
+#else
 	const char *ProgDir = getenv("programfiles");
 	puts(ProgDir);
 	DIR *Folder = opendir(ProgDir);
@@ -469,8 +464,9 @@ static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 	closedir(Folder);
 	*Out = '\0';
 	return false;
-}
+
 #endif //WIN
+}
 
 static void GTK_NukeContainerChildren(GtkContainer *Container)
 {
