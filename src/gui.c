@@ -17,6 +17,8 @@ See the included file UNLICENSE.TXT for more information.
 #include <windows.h>
 #include <dirent.h>
 #include <tchar.h>
+#else
+#include <sys/wait.h>
 #endif //WIN
 
 struct GooeyGuts GuiInfo;
@@ -283,32 +285,82 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
 #ifndef WIN
-	pid_t PID = fork();
+	pid_t WatcherPID = fork();
 	
-	if (PID == -1)
+	if (WatcherPID == -1)
 	{
 		GUI_DrawLaunchFailure();
 		return;
 	}
 	
-	if (PID != 0)
+	if (WatcherPID != 0)
 	{
-		signal(SIGCHLD, SIG_IGN);
-		return;
+		int ExitCode = 0;
+		waitpid(WatcherPID, &ExitCode, 0);
 		
-	}
-	char IPFormat[128] = "--join=";
-	if (IP == NULL)
-	{
-		strcpy(IPFormat, "--host");
-	}
-	else
-	{
-		strcat(IPFormat, IP);
+		if (WEXITSTATUS(ExitCode) != 0)
+		{
+			GUI_DrawLaunchFailure();
+		}
+		
+		return;
 	}
 	
-	execlp("warzone2100", "warzone2100", IPFormat, NULL);
+	///Watcher does this stuff.
 	
+	
+	//Check if the executable exists.
+	const char *Path = getenv("PATH");
+	char Name[1024];
+	const char *Worker = Path;
+	
+	do
+	{
+		unsigned Inc = 0;
+		
+		if (*Worker == ':') ++Worker;
+		
+		for (; Inc < (sizeof Name - 1 - (sizeof "/warzone2100" - 1)) &&
+				Worker[Inc] != ':' && Worker[Inc] != '\0'; ++Inc)
+		{
+			Name[Inc] = Worker[Inc];
+		}
+		Name[Inc] = '\0';
+		
+		strcat(Name, "/warzone2100");
+		
+		struct stat FileStat;
+		
+		if (stat(Name, &FileStat) == 0)
+		{
+			signal(SIGCHLD, SIG_IGN);				
+			pid_t GamePID = fork();
+			
+			if (GamePID == -1) exit(1);
+			
+			if (GamePID != 0)
+			{ //It worked.
+				exit(0);
+			}
+
+			char IPFormat[128] = "--join=";
+			if (IP == NULL)
+			{
+				strcpy(IPFormat, "--host");
+			}
+			else
+			{
+				strcat(IPFormat, IP);
+			}
+			
+			execlp("warzone2100", "warzone2100", IPFormat, NULL);
+			
+			exit(1);
+		}
+	} while ((Worker = strchr(Worker, ':')) != NULL);
+	
+	exit(1);
+
 #else //WINDOWS CODE!!
     STARTUPINFO StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
