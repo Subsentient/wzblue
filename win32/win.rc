@@ -25,12 +25,12 @@ BEGIN
 		BEGIN
 			VALUE "CompanyName", "Subsentient"
 			VALUE "FileDescription", "WZBlue lobby monitor"
-			VALUE "FileVersion", "0.9"
+			VALUE "FileVersion", "1.0"
 			VALUE "InternalName", "WZBlue"
 			VALUE "LegalCopyright", "2015 Subsentient, Public Domain"
 			VALUE "OriginalFilename", "wzblue.exe"
 			VALUE "ProductName", "WZBlue lobby monitor"
-			VALUE "ProductVersion", "0.9"
+			VALUE "ProductVersion", "1.0"
 			
 		END
 	END

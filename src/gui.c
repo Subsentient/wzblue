@@ -231,7 +231,7 @@ GtkWidget *GUI_InitGUI()
 	//The refresh button, aligned to the right.
 	GtkWidget *Align = gtk_alignment_new(0.0, 0.5, 0.5, 0.01);
 	GtkWidget *Button1 = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
-	GtkWidget *Button2 = gtk_button_new_with_mnemonic("_Host Game");
+	GtkWidget *Button2 = gtk_button_new_with_mnemonic("H_ost Game");
 	GtkWidget *B2Image = gtk_image_new_from_stock(GTK_STOCK_NETWORK, GTK_ICON_SIZE_BUTTON);
 	
 	gtk_button_set_image((GtkButton*)Button2, (void*)B2Image);
