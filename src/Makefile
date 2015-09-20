@@ -6,7 +6,7 @@ OBJECTS = wz.c netcore.c main.c gui.c
 STRIP = strip
 
 ifeq ($(OS),WIN)
-	CFLAGS += -lws2_32 -DWIN -mwindows
+	CFLAGS += -lws2_32 -DWIN -mwindows -lcomctl32
 	OUTFILE = ../wzblue.exe
 	OBJECTS += ../win32/win.o
 	STRIP = i686-pc-mingw32-strip
