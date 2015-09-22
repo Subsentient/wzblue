@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.0"
+#define WZBLUE_VERSION "1.1"
 
 #include <gtk/gtk.h>
 
