@@ -552,7 +552,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		
 		snprintf(OutBuf, sizeof OutBuf, "Name: <b><span foreground=\"#009bff\">%s</span></b> | "
 									"Map: <b><span foreground=\"#00bb00\">%s</span></b>%s | "
-									"Host: <b><span foreground=\"#cc00cc\">%s</span></b>\n"
+									"Host: <b><span foreground=\"#ff8300\">%s</span></b>\n"
 									"Players: <b>%d/%d</b> %s| IP: <b>%s</b> | Version: <b>%s</b>%s",
 				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
 				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
