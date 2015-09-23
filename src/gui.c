@@ -181,13 +181,14 @@ void GUI_DrawMenus()
 	gtk_menu_shell_append(GTK_MENU_SHELL(MenuBar), HelpTag);
 	
 	gtk_container_add((GtkContainer*)Align, MenuBar);
-	gtk_container_add((GtkContainer*)GuiInfo.VBox, Align);
+	gtk_table_attach(GTK_TABLE(GuiInfo.Table), Align, 0, 6, 0, 1, GTK_FILL, GTK_SHRINK, 0, 0);
+
 	
 	//gtk_widget_set_size_request(MenuBar, -1, 20);
 	
 	gtk_window_add_accel_group((GtkWindow*)GuiInfo.Win, AccelGroup);
 	
-	gtk_widget_show_all(GuiInfo.VBox);
+	gtk_widget_show_all(GuiInfo.Table);
 }
 
 GtkWidget *GUI_InitGUI()
@@ -203,23 +204,23 @@ GtkWidget *GUI_InitGUI()
 	
 	gtk_widget_set_size_request(Win, -1, -1);
 	
-	gtk_window_set_resizable((GtkWindow*)Win, false);
+	//gtk_window_set_resizable((GtkWindow*)Win, false);
 
 	//Create the main vertical box.
-	GtkWidget *VBox = GuiInfo.VBox = gtk_vbox_new(FALSE, 6); //One for menu, one for status, one for games list.
-	gtk_container_add((GtkContainer*)Win, VBox);
+	GtkWidget *Table = GuiInfo.Table = gtk_table_new(6, 4, FALSE);
 	
 	//Create a scrolled window.
 	GtkWidget *ScrolledWindow = GuiInfo.ScrolledWindow = gtk_scrolled_window_new(NULL, NULL);
-	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrolledWindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_set_policy((GtkScrolledWindow*)ScrolledWindow, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-	gtk_widget_set_size_request(ScrolledWindow, 800, 400);
-	gtk_container_set_border_width(GTK_CONTAINER(ScrolledWindow), 5);
+	//gtk_widget_set_size_request(ScrolledWindow, 800, 400);
+	gtk_container_set_border_width((GtkContainer*)ScrolledWindow, 5);
 	
 	
 	///Add to the main vertical box.
 	GUI_DrawMenus();
-	gtk_box_pack_start((GtkBox*)VBox, ScrolledWindow, FALSE, FALSE, 0);
+	gtk_table_attach((GtkTable*)Table, ScrolledWindow, 0, 6, 1, 4, GTK_FILL, GTK_FILL, 0, 0);
+
 	
 	//Status bar
 	GtkWidget *StatusBar = GuiInfo.StatusBar = gtk_statusbar_new();
@@ -264,11 +265,11 @@ GtkWidget *GUI_InitGUI()
 	g_signal_connect_swapped(G_OBJECT(Button1), "clicked", (GCallback)Main_LoopFunc, &False);
 	g_signal_connect_swapped(G_OBJECT(Button2), "clicked", (GCallback)GUI_LaunchGame, NULL);
 	
-	gtk_box_pack_start((GtkBox*)VBox, Align, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)VBox, StatusBar, FALSE, FALSE, 0);
+	gtk_table_attach((GtkTable*)Table, Align, 0, 3, 4, 5, GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, StatusBar, 0, 6, 5, 6, GTK_FILL, GTK_SHRINK, 0, 0);
 	
+	gtk_container_add((GtkContainer*)Win, Table);
 	gtk_widget_show_all(Win);
-	
 	return ScrolledWindow;
 }
 
@@ -277,7 +278,7 @@ GtkWidget *GUI_InitGUI()
 void GUI_ClearGames(GtkWidget *ScrolledWindow)
 {
 	if (!ScrolledWindow) return;
-	
+
 	GTK_NukeContainerChildren((GtkContainer*)ScrolledWindow);
 }
 

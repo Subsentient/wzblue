@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 }
 
 static void Main_CheckLoop(void)
-{	
+{
 	GUI_CheckSlider();
 	
 	if (Counter >= RefreshRate)
