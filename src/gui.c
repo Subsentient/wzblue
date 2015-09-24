@@ -194,6 +194,7 @@ void GUI_DrawMenus()
 GtkWidget *GUI_InitGUI()
 {
 	GtkWidget *Win = GuiInfo.Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size((GtkWindow*)Win, 800, 500);
 	GUI_LoadIcon();
 	
 	//Connect the destroy signal to allow quitting when we close the window.
@@ -219,7 +220,7 @@ GtkWidget *GUI_InitGUI()
 	
 	///Add to the main vertical box.
 	GUI_DrawMenus();
-	gtk_table_attach((GtkTable*)Table, ScrolledWindow, 0, 6, 1, 4, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, ScrolledWindow, 0, 6, 1, 4, GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 0, 0);
 
 	
 	//Status bar
