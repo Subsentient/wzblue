@@ -60,7 +60,12 @@ struct GooeyGuts
 	GtkWidget *ScrolledWindow;
 	guint StatusBarContextID;
 	GtkWidget *Table;
-	GdkPixbuf *IconPixbuf;
+	GdkPixbuf *WMIcon_Pixbuf;
+	GdkPixbuf *Icon_Open_Pixbuf;
+	GdkPixbuf *Icon_Full_Pixbuf;
+	GdkPixbuf *Icon_Locked_Pixbuf;
+	GdkPixbuf *Icon_Mod_Pixbuf;
+	
 	GtkWidget *Slider;
 };
 

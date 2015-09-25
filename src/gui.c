@@ -11,7 +11,7 @@ See the included file UNLICENSE.TXT for more information.
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 #include "wzblue.h"
-#include "icon.h"
+#include "icons.h"
 
 #ifdef WIN
 #include <windows.h>
@@ -25,7 +25,7 @@ struct GooeyGuts GuiInfo;
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
-static void GUI_LoadIcon(void);
+static void GUI_LoadIcons(void);
 static void GUI_LaunchGame(const char *IP);
 static void GUI_DrawLaunchFailure(void);
 
@@ -52,14 +52,44 @@ gboolean GUI_CheckSlider(void)
 }
 	
 
-static void GUI_LoadIcon(void)
+static void GUI_LoadIcons(void)
 {
-	GdkPixbufLoader *Loader = gdk_pixbuf_loader_new();
 	
-	gdk_pixbuf_loader_write(Loader, WZBlueIcon_Data, sizeof WZBlueIcon_Data, NULL);
-	GuiInfo.IconPixbuf = gdk_pixbuf_loader_get_pixbuf(Loader);
+	//Our logo
+	GdkPixbufLoader *WMIconL = gdk_pixbuf_loader_new();
 	
-	gtk_window_set_icon((GtkWindow*)GuiInfo.Win, GuiInfo.IconPixbuf);
+	gdk_pixbuf_loader_write(WMIconL, WMIcon, sizeof WMIcon, NULL);
+	gdk_pixbuf_loader_close(WMIconL, NULL);
+	
+	GuiInfo.WMIcon_Pixbuf = gdk_pixbuf_loader_get_pixbuf(WMIconL);
+	 
+	//Full icon
+	GdkPixbufLoader *FullLoader = gdk_pixbuf_loader_new();
+	gdk_pixbuf_loader_write(FullLoader, Icon_Full, sizeof Icon_Full, NULL);
+	gdk_pixbuf_loader_close(FullLoader, NULL);
+
+	//Open icon
+	GdkPixbufLoader *OpenLoader = gdk_pixbuf_loader_new();
+	gdk_pixbuf_loader_write(OpenLoader, Icon_Open, sizeof Icon_Open, NULL);
+	gdk_pixbuf_loader_close(OpenLoader, NULL);
+	
+	//Mod icon
+	GdkPixbufLoader *ModLoader = gdk_pixbuf_loader_new();
+	gdk_pixbuf_loader_write(ModLoader, Icon_Mod, sizeof Icon_Mod, NULL);
+	gdk_pixbuf_loader_close(ModLoader, NULL);
+	
+	//Locked icon
+	GdkPixbufLoader *LockedLoader = gdk_pixbuf_loader_new();
+	gdk_pixbuf_loader_write(LockedLoader, Icon_Locked, sizeof Icon_Locked, NULL);
+	gdk_pixbuf_loader_close(LockedLoader, NULL);
+	
+
+	GuiInfo.Icon_Full_Pixbuf = gdk_pixbuf_loader_get_pixbuf(FullLoader);
+	GuiInfo.Icon_Open_Pixbuf = gdk_pixbuf_loader_get_pixbuf(OpenLoader);
+	GuiInfo.Icon_Mod_Pixbuf = gdk_pixbuf_loader_get_pixbuf(ModLoader);
+	GuiInfo.Icon_Locked_Pixbuf = gdk_pixbuf_loader_get_pixbuf(LockedLoader);
+	
+	gtk_window_set_icon((GtkWindow*)GuiInfo.Win, GuiInfo.WMIcon_Pixbuf);
 }
 	
 void GTK_NukeWidget(GtkWidget *Widgy)
@@ -112,7 +142,7 @@ void GUI_DrawAboutDialog()
 	GtkWidget *ButtonAlign = gtk_alignment_new(1.0, 1.0, 0.1, 1.0);
 	
 	GtkWidget *VBox = gtk_vbox_new(FALSE, 5);
-	GtkWidget *Image = gtk_image_new_from_pixbuf(GuiInfo.IconPixbuf);
+	GtkWidget *Image = gtk_image_new_from_pixbuf(GuiInfo.WMIcon_Pixbuf);
 	
 	gtk_container_add(GTK_CONTAINER(AboutWin), VBox);
 	char AboutString[2048];
@@ -195,7 +225,7 @@ GtkWidget *GUI_InitGUI()
 {
 	GtkWidget *Win = GuiInfo.Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size((GtkWindow*)Win, 800, 500);
-	GUI_LoadIcon();
+	GUI_LoadIcons();
 	
 	//Connect the destroy signal to allow quitting when we close the window.
 	g_signal_connect(G_OBJECT(Win), "destroy", G_CALLBACK(GTK_Destroy), NULL);
@@ -519,8 +549,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	
 	unsigned Inc = 0;
 	char OutBuf[2048];
-	const char *StockID = NULL;
-	
+	GdkPixbuf *IconBuf = NULL;
 	gtk_box_pack_start(GTK_BOX(VBox), gtk_hseparator_new(), FALSE, FALSE, 0);
 	
 	for (; Inc < GamesAvailable; ++Inc)
@@ -530,19 +559,19 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		
 		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
 		{ /*Game is full.*/
-			StockID = GTK_STOCK_NO;
+			IconBuf = GuiInfo.Icon_Full_Pixbuf;
 		}
 		else if (GamesList[Inc].PrivateGame)
 		{ /*Private game.*/
-			StockID = GTK_STOCK_DIALOG_AUTHENTICATION;
+			IconBuf = GuiInfo.Icon_Locked_Pixbuf;
 		}
 		else if (*GamesList[Inc].ModList != '\0')
 		{ /*It has mods.*/
-			StockID = GTK_STOCK_CONVERT;
+			IconBuf = GuiInfo.Icon_Mod_Pixbuf;
 		}
 		else
 		{ /*Normal, joinable game.*/
-			StockID = GTK_STOCK_YES;
+			IconBuf = GuiInfo.Icon_Open_Pixbuf;
 		}
 		
 		/*Add mod warning even if we don't get the color for that.*/
@@ -561,7 +590,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].NetSpecs.HostIP,
 				GamesList[Inc].VersionString, ModString);
 				
-		GtkWidget *Icon = gtk_image_new_from_stock(StockID, GTK_ICON_SIZE_BUTTON);
+		GtkWidget *Icon = gtk_image_new_from_pixbuf(IconBuf);
 		
 		GtkWidget *Label = gtk_label_new("");
 		gtk_label_set_markup((GtkLabel*)Label, OutBuf);
@@ -599,7 +628,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		gtk_box_pack_start(GTK_BOX(HBox2), Button, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox2), VSep2, FALSE, FALSE, 0);
 		
-		gtk_box_pack_start(GTK_BOX(HBox), Icon, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox), Icon, FALSE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), VSep, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), HBox2, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox), Label, FALSE, FALSE, 0);
