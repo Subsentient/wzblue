@@ -148,8 +148,8 @@ void GUI_DrawAboutDialog()
 	char AboutString[2048];
 	
 	snprintf(AboutString, sizeof AboutString, "WZBlue Warzone 2100 Lobby Monitor version " WZBLUE_VERSION "\n"
-										"Compiled against GTK %d.%d\n\n"
-										"By Subsentient. Game status icons by tmp500.", GTK_MAJOR_VERSION, GTK_MINOR_VERSION);
+										"Compiled against GTK %d.%d.%d\n\n"
+										"By Subsentient. Game status icons by tmp500.", GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
 	
 	GtkWidget *Button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	GtkWidget *Label = gtk_label_new(AboutString);
