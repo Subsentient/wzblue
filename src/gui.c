@@ -44,10 +44,10 @@ gboolean GUI_CheckSlider(void)
 	if (RefreshRate != NewRate)
 	{
 		RefreshRate = NewRate;
-		return true; //Value changed.
+		return TRUE; //Value changed.
 	}
 	
-	return false;
+	return FALSE;
 
 }
 	
@@ -130,8 +130,8 @@ void GUI_DrawAboutDialog()
 	GtkWidget *AboutWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
 	gtk_window_set_type_hint((GtkWindow*)AboutWin, GDK_WINDOW_TYPE_HINT_DIALOG);
-	gtk_window_set_skip_taskbar_hint((GtkWindow*)AboutWin, true);
-	gtk_window_set_resizable((GtkWindow*)AboutWin, false);
+	gtk_window_set_skip_taskbar_hint((GtkWindow*)AboutWin, TRUE);
+	gtk_window_set_resizable((GtkWindow*)AboutWin, FALSE);
 	
 	gtk_window_set_title(GTK_WINDOW(AboutWin), "About WZBlue");
 
@@ -235,7 +235,7 @@ GtkWidget *GUI_InitGUI()
 	
 	gtk_widget_set_size_request(Win, -1, -1);
 	
-	//gtk_window_set_resizable((GtkWindow*)Win, false);
+	//gtk_window_set_resizable((GtkWindow*)Win, FALSE);
 
 	//Create the main vertical box.
 	GtkWidget *Table = GuiInfo.Table = gtk_table_new(6, 4, FALSE);
@@ -402,7 +402,7 @@ static void GUI_DrawLaunchFailure(void)
 	
 	gtk_widget_set_size_request(Win, -1, -1);
 	
-	gtk_window_set_resizable((GtkWindow*)Win, false);
+	gtk_window_set_resizable((GtkWindow*)Win, FALSE);
 	
 	GtkWidget *Table = gtk_table_new(2, 2, FALSE);
 	
@@ -453,13 +453,13 @@ static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 		{
 			strncpy(Out, Name, OutMaxSize - 1);
 			Out[OutMaxSize - 1] = '\0';
-			return true;
+			return TRUE;
 		}
 	} while ((Worker = strchr(Worker, ':')) != NULL);
 	
 	*Out = '\0';
 	
-	return false;
+	return FALSE;
 #else
 	const char *ProgDir = getenv("programfiles");
 	puts(ProgDir);
@@ -488,14 +488,14 @@ static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 				Out[OutMaxSize - 1] = '\0';
 				
 				closedir(Folder);
-				return true;
+				return TRUE;
 			}
 		}
 	}
 	
 	closedir(Folder);
 	*Out = '\0';
-	return false;
+	return FALSE;
 
 #endif //WIN
 }
@@ -522,7 +522,7 @@ static void GTK_NukeContainerChildren(GtkContainer *Container)
 
 void GUI_NoGames(GtkWidget *ScrolledWindow)
 {
-	GtkWidget *VBox = gtk_vbox_new(false, 1); //Because it wants a container.
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 1); //Because it wants a container.
 	
 	GtkWidget *Label = gtk_label_new("No games available.");
 	gtk_box_pack_start(GTK_BOX(VBox), Label, FALSE, FALSE, 20);
@@ -545,7 +545,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	
 	if (!ScrolledWindow || !GamesList || !GamesAvailable) return;
 	
-	GtkWidget *VBox = gtk_vbox_new(false, (GamesAvailable * 2) - 1);
+	GtkWidget *VBox = gtk_vbox_new(FALSE, (GamesAvailable * 2) - 1);
 	
 	unsigned Inc = 0;
 	char OutBuf[2048];
@@ -555,7 +555,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	for (; Inc < GamesAvailable; ++Inc)
 	{
 		char ModString[384] = { '\0' };
-		const Bool MapMod = GamesList[Inc].MapMod;
+		const gboolean MapMod = GamesList[Inc].MapMod;
 		
 		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
 		{ /*Game is full.*/
@@ -619,8 +619,8 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 			gtk_button_set_label((GtkButton*)Button, "Game Full");
 		}
 		
-		GtkWidget *HBox = gtk_hbox_new(false, 4);
-		GtkWidget *HBox2 = gtk_hbox_new(false, 2);
+		GtkWidget *HBox = gtk_hbox_new(FALSE, 4);
+		GtkWidget *HBox2 = gtk_hbox_new(FALSE, 2);
 		
 		
 		GtkWidget *VSep = gtk_vseparator_new(), *VSep2 = gtk_vseparator_new();

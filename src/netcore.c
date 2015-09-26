@@ -19,7 +19,7 @@ See the included file UNLICENSE.TXT for more information.
 
 #include "wzblue.h"
 
-Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_)
+gboolean Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_)
 {
 
 	char *FailMsg = "Failed to establish a connection to the server:";
@@ -39,7 +39,7 @@ Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescript
 	if ((*SocketDescriptor_ = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 		perror(FailMsg);
-		return false;
+		return FALSE;
 	}
 	
 	memcpy(&SocketStruct.sin_addr, HostnameStruct->h_addr_list[0], HostnameStruct->h_length);
@@ -52,13 +52,13 @@ Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescript
 		
 		fprintf(stderr, "Failed to connect to server \"%s\".\n", InHost);
 		*SocketDescriptor_ = 0;
-		return false;
+		return FALSE;
 	}
 
-	return true;
+	return TRUE;
 }
 
-Bool Net_Write(int SockDescriptor, const char *InMsg)
+gboolean Net_Write(int SockDescriptor, const char *InMsg)
 {
 	size_t StringSize = strlen(InMsg);
 	unsigned Transferred = 0, TotalTransferred = 0;
@@ -69,17 +69,17 @@ Bool Net_Write(int SockDescriptor, const char *InMsg)
 		
 		if (Transferred == -1) /*This is ugly I know, but it's converted implicitly, so shut up.*/
 		{
-			return false;
+			return FALSE;
 		}
 		
 		TotalTransferred += Transferred;
 	} while (StringSize > TotalTransferred);
 	
 	
-	return true;
+	return TRUE;
 }
 
-Bool Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, Bool TextStream)
+gboolean Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, gboolean TextStream)
 {
 	int Status = 0;
 	unsigned char Byte = 0;
@@ -102,14 +102,14 @@ Bool Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, Bool Tex
 		if (*(OutStream - 1) == '\r') *(OutStream - 1) = '\0';
 	}
 	
-	if (Status == -1) return false;
+	if (Status == -1) return FALSE;
 	
-	return true;
+	return TRUE;
 }
 
-Bool Net_Disconnect(int SockDescriptor)
+gboolean Net_Disconnect(int SockDescriptor)
 {
-	if (!SockDescriptor) return false;
+	if (!SockDescriptor) return FALSE;
 	
 #ifdef WIN
 	return !closesocket(SockDescriptor);

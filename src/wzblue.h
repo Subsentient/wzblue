@@ -12,10 +12,6 @@ See the included file UNLICENSE.TXT for more information.
 
 #include <gtk/gtk.h>
 
-typedef gboolean Bool; //Because fuck you
-#define false FALSE
-#define true TRUE
-
 #define NUMELEMENTS(x) (sizeof x / sizeof *x)
 typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
 
@@ -78,14 +74,14 @@ extern gboolean True, False;
 gboolean Main_LoopFunc(gboolean *ViaLoop);
 
 /*netcore.c*/
-Bool Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);
-Bool Net_Disconnect(int SockDescriptor);
-Bool Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, Bool TextStream);
-Bool Net_Disconnect(int SockDescriptor);
-Bool Net_Write(int SockDescriptor, const char *InMsg);
+gboolean Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);
+gboolean Net_Disconnect(int SockDescriptor);
+gboolean Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, gboolean TextStream);
+gboolean Net_Disconnect(int SockDescriptor);
+gboolean Net_Write(int SockDescriptor, const char *InMsg);
 
 /*wz.c*/
-Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer);
+gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer);
 void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable, GtkWidget *ScrolledWindow);
 
 /*gui.c*/

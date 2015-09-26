@@ -20,9 +20,9 @@ See the included file UNLICENSE.TXT for more information.
 
 #include "wzblue.h"
 
-static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct);
+static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct);
 
-static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
+static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 {
 	uint32_t Inc = 0;
 	GameStruct RV = { 0 };
@@ -38,7 +38,7 @@ static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 							sizeof RV.ModList + 
 							sizeof(uint32_t) * 9] = { 0 }, *Worker = SuperBuffer;
 	
-	if (!Net_Read(SockDescriptor, SuperBuffer, sizeof SuperBuffer, false)) return false;
+	if (!Net_Read(SockDescriptor, SuperBuffer, sizeof SuperBuffer, FALSE)) return FALSE;
 	
 	memcpy(&RV.StructVer, Worker, sizeof RV.StructVer);
 	RV.StructVer = ntohl(RV.StructVer);
@@ -101,10 +101,10 @@ static Bool WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 	
 	memcpy(OutStruct, &RV, sizeof RV);
 	
-	return true;
+	return TRUE;
 }
 
-Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer)
+gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer)
 {
 	GameStruct *GamesList = NULL;
 	static GameStruct *PrevList;
@@ -116,20 +116,20 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAva
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
 		puts("Unable to connect to lobby server!");
-		return false;
+		return FALSE;
 	}
 	
 	if (!Net_Write(WZSocket, "list\r\n"))
 	{
 		puts("Unable to write LIST command to lobby server!");
-		return false;
+		return FALSE;
 	}
 	
 	/*Get number of available games.*/
-	if (!Net_Read(WZSocket, GamesAvailable, sizeof(uint32_t), false))
+	if (!Net_Read(WZSocket, GamesAvailable, sizeof(uint32_t), FALSE))
 	{
 		puts("Unable to read data from connection to lobby server!");
-		return false;
+		return FALSE;
 	}
 	
 	*GamesAvailable = ntohl(*GamesAvailable);
@@ -144,19 +144,19 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAva
 			if (PrevList) free(PrevList);
 			PrevList = NULL;
 			free(GamesList);
-			return false;
+			return FALSE;
 		}
 	}
 	
 	Net_Disconnect(WZSocket);
 	
-	Bool RetVal = false;
+	gboolean RetVal = FALSE;
 	if (PrevList)
 	{
 		//Compare the lists to see if the new one is identical to the old.
 		if (PrevAvailable != *GamesAvailable)
 		{
-			RetVal = true;
+			RetVal = TRUE;
 		}
 		else
 		{
@@ -164,7 +164,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAva
 			{
 				if (memcmp(GamesList + Inc, PrevList + Inc, sizeof(GameStruct)) != 0)
 				{
-					RetVal = true;
+					RetVal = TRUE;
 					break;
 				}
 			}
@@ -172,7 +172,7 @@ Bool WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAva
 	}
 	else
 	{
-		RetVal = true;
+		RetVal = TRUE;
 	}
 	PrevAvailable = *GamesAvailable;
 	if (PrevList) free(PrevList);

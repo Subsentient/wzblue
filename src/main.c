@@ -20,7 +20,7 @@ unsigned RefreshRate = 10; /*10 sec refresh by default*/
 static char Server[128] = "lobby.wz2100.net"; //The lobby server hostname.
 static int Port = 9990;
 static unsigned Counter = 0;
-gboolean True = true, False = false;
+gboolean True = TRUE, False = FALSE;
 //Prototypes
 
 static void Main_CheckLoop(void);
@@ -29,13 +29,13 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 {
 	uint32_t GamesAvailable = 0;
 	GameStruct *GamesList = NULL;
-	gboolean RetVal = true;
+	gboolean RetVal = TRUE;
 	
 	if (!*ViaLoop) Counter = 0;
 	
 	GUI_SetStatusBar("Refreshing...");
 	GUI_Flush();
-	Bool Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
+	gboolean Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
 	
 	if (GamesAvailable)
 	{
