@@ -1,6 +1,7 @@
 GTKCHOICE = 2
 PKGCONFIG = pkg-config
-CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags --libs gtk+-$(GTKCHOICE).0`
+CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0`
+LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0`
 OUTFILE = ../wzblue
 OBJECTS = wz.o netcore.o main.o gui.o
 STRIP = strip
@@ -17,7 +18,7 @@ all:
 	$(CC) netcore.c -c $(CFLAGS)
 	$(CC) main.c -c $(CFLAGS)
 	$(CC) gui.c -c $(CFLAGS)
-	$(CC) $(OBJECTS) -o $(OUTFILE) $(CFLAGS)
+	$(CC) $(OBJECTS) -o $(OUTFILE) $(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.gch
