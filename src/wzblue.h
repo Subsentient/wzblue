@@ -50,18 +50,23 @@ typedef struct
 
 struct GooeyGuts
 {
+	//Widgets
 	GtkWidget *StatusBar;
 	GtkWidget *Win;
 	GtkWidget *ScrolledWindow;
-	guint StatusBarContextID;
 	GtkWidget *Table;
+	GtkWidget *Slider;
+	
+	//Icon pixbufs
 	GdkPixbuf *WMIcon_Pixbuf;
 	GdkPixbuf *Icon_Open_Pixbuf;
 	GdkPixbuf *Icon_Full_Pixbuf;
 	GdkPixbuf *Icon_Locked_Pixbuf;
 	GdkPixbuf *Icon_Mod_Pixbuf;
 	
-	GtkWidget *Slider;
+	//Widget properties
+	guint StatusBarContextID;
+
 };
 
 
