@@ -2,7 +2,7 @@ GTKCHOICE = 2
 PKGCONFIG = pkg-config
 CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags --libs gtk+-$(GTKCHOICE).0`
 OUTFILE = ../wzblue
-OBJECTS = wz.c netcore.c main.c gui.c
+OBJECTS = wz.o netcore.o main.o gui.o
 STRIP = strip
 
 ifeq ($(OS),WIN)
@@ -13,6 +13,10 @@ ifeq ($(OS),WIN)
 endif
 	
 all:
+	$(CC) wz.c -c $(CFLAGS)
+	$(CC) netcore.c -c $(CFLAGS)
+	$(CC) main.c -c $(CFLAGS)
+	$(CC) gui.c -c $(CFLAGS)
 	$(CC) $(OBJECTS) -o $(OUTFILE) $(CFLAGS)
 
 clean:
