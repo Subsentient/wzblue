@@ -13,7 +13,6 @@ See the included file UNLICENSE.TXT for more information.
 #include <gtk/gtk.h>
 
 #define NUMELEMENTS(x) (sizeof x / sizeof *x)
-typedef enum { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, ENDCOLOR = 0 } ConsoleColor;
 
 #include <stdint.h>
 typedef struct
