@@ -2,7 +2,6 @@
 *.gch
 src/*.o
 src/*.gch
-src/substrings/libsubstrings*
 win32/*.o
 win32/*.gch
 wzblue
