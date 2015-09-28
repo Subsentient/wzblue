@@ -28,6 +28,7 @@ static void GTK_NukeContainerChildren(GtkContainer *Container);
 static void GUI_LoadIcons(void);
 static void GUI_LaunchGame(const char *IP);
 static void GUI_DrawLaunchFailure(void);
+static void GUI_DrawSettingsDialog(void);
 
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
 
@@ -305,6 +306,123 @@ GtkWidget *GUI_InitGUI()
 }
 
 
+static void GUI_CreateRadioButtonGroup(const unsigned Count, const char *const Names[], GtkWidget *Out[])
+{
+	unsigned Inc = 0;
+	
+	void *Prev = NULL;
+	
+	for (; Inc < Count; ++Inc)
+	{
+		GtkWidget *(*Func)() = Inc == 0 ? (GtkWidget*(*)())gtk_radio_button_new_with_label : (GtkWidget*(*)())gtk_radio_button_new_with_label_from_widget;
+		
+		Out[Inc] = Prev = Func(Prev, Names[Inc]);
+	}
+}
+		
+static void GUI_DrawSettingsDialog(void)
+{
+	GtkWidget *Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_widget_set_size_request((GtkWidget*)Win, 600, -1);
+	
+	//Connect the destroy signal
+	g_signal_connect(G_OBJECT(Win), "destroy", (GCallback)GTK_NukeWidget, NULL);
+
+	//Window settings
+	gtk_window_set_type_hint((GtkWindow*)Win, GDK_WINDOW_TYPE_HINT_DIALOG);
+	gtk_window_set_skip_taskbar_hint((GtkWindow*)Win, TRUE);
+	gtk_window_set_resizable((GtkWindow*)Win, FALSE);
+	gtk_window_set_title(GTK_WINDOW(Win), "Settings");
+
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 15);
+	
+	gtk_container_add((GtkContainer*)Win, VBox);
+	
+	//Main window label and the separator.
+	GtkWidget *Label = gtk_label_new("Game launch options");
+	
+	gtk_box_pack_start((GtkBox*)VBox, Label, TRUE, FALSE, 10);
+	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+
+	
+	///Options
+	GtkWidget *RadioButtons[3] = { NULL };
+	const char *const RadioLabels[3] = { "Unspecified", "No", "Yes" };
+	static const enum SettingsChoice States[3] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
+	
+	unsigned Inc = 0;
+	
+	//Sound
+	GtkWidget *SoundAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
+	GtkWidget *SoundHBox = gtk_hbox_new(FALSE, 4);
+	
+	gtk_container_add((GtkContainer*)SoundAlign, SoundHBox);
+	
+	GtkWidget *SoundLabel = gtk_label_new("Enable sound");
+	GtkWidget *SoundSep = gtk_vseparator_new();
+	
+	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
+	
+	gtk_box_pack_start((GtkBox*)SoundHBox, SoundLabel, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)SoundHBox, SoundSep, FALSE, FALSE, 0);
+	
+	for (Inc = 0; Inc < 3; ++Inc)
+	{
+		gtk_box_pack_start((GtkBox*)SoundHBox, RadioButtons[Inc], FALSE, FALSE, 0);
+	}
+	
+	gtk_box_pack_start((GtkBox*)VBox, SoundAlign, TRUE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	
+	//Shadows
+	GtkWidget *ShadowAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
+	GtkWidget *ShadowHBox = gtk_hbox_new(FALSE, 4);
+	
+	gtk_container_add((GtkContainer*)ShadowAlign, ShadowHBox);
+	
+	GtkWidget *ShadowLabel = gtk_label_new("Enable shadows");
+	GtkWidget *ShadowSep = gtk_vseparator_new();
+	
+	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
+	
+	gtk_box_pack_start((GtkBox*)ShadowHBox, ShadowLabel, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)ShadowHBox, ShadowSep, FALSE, FALSE, 0);
+
+	for (Inc = 0; Inc < 3; ++Inc)
+	{
+		gtk_box_pack_start((GtkBox*)ShadowHBox, RadioButtons[Inc], FALSE, FALSE, 0);
+	}
+	
+	gtk_box_pack_start((GtkBox*)VBox, ShadowAlign, TRUE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	
+	//Texture compression
+	GtkWidget *TextureCompressAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
+	GtkWidget *TextureCompressHBox = gtk_hbox_new(FALSE, 4);
+	
+	gtk_container_add((GtkContainer*)TextureCompressAlign, TextureCompressHBox);
+	
+	GtkWidget *TextureCompressLabel = gtk_label_new("Enable texture compression");
+	GtkWidget *TextureCompressSep = gtk_vseparator_new();
+	
+	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
+	
+	gtk_box_pack_start((GtkBox*)TextureCompressHBox, TextureCompressLabel, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)TextureCompressHBox, TextureCompressSep, TRUE, TRUE, 0);
+
+	for (Inc = 0; Inc < 3; ++Inc)
+	{
+		gtk_box_pack_start((GtkBox*)TextureCompressHBox, RadioButtons[Inc], FALSE, FALSE, 0);
+	}
+	
+	gtk_box_pack_start((GtkBox*)VBox, TextureCompressAlign, TRUE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	
+
+	///Draw it all
+	gtk_widget_show_all(Win);
+	return;
+}
 //Empty the scrolled window so we can rebuild it.
 void GUI_ClearGames(GtkWidget *ScrolledWindow)
 {

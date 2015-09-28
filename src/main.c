@@ -114,6 +114,9 @@ int main(int argc, char **argv)
 		}
 	}
 	
+	//Read in settings, if present.
+	Settings_ReadSettings();
+	
 	//Start the GUI
 	gtk_init(&argc, &argv);
 	

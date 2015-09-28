@@ -69,11 +69,41 @@ struct GooeyGuts
 
 };
 
+enum SettingsChoice { CHOICE_NO = -1, CHOICE_UNSPECIFIED, CHOICE_YES };
+
+struct Settings
+{
+/*DON'T PUT POINTERS IN HERE!
+* it gets written to a file as configuration!
+*/
+	char WarzoneBinaryPath[1024];
+	struct
+	{
+		unsigned Width;
+		unsigned Height;
+	} Resolution;
+	enum SettingsChoice Sound;
+	enum SettingsChoice Shadows;
+	enum SettingsChoice Fullscreen;
+	enum SettingsChoice Shaders;
+	enum SettingsChoice VBOS;
+	enum SettingsChoice TextureCompression;
+	
+	//For future options
+	enum SettingsChoice Reserved1;
+	enum SettingsChoice Reserved2;
+	enum SettingsChoice Reserved3;
+	enum SettingsChoice Reserved4;
+
+}; //All additions to this structure must come *after* the last item. This ensures compatibility with future versions.
+
 
 //Globals
 extern unsigned RefreshRate;
 extern struct GooeyGuts GuiInfo;
 extern gboolean True, False;
+extern struct Settings Settings;
+
 /*main.c*/
 gboolean Main_LoopFunc(gboolean *ViaLoop);
 
@@ -97,5 +127,9 @@ void GUI_SetStatusBar(const char *Text);
 void GUI_SetStatusBar_GameCount(const uint32_t GamesAvailable);
 void GUI_Flush(void);
 gboolean GUI_CheckSlider(void);
+
+/*settings.c*/
+gboolean Settings_ReadSettings(void);
+gboolean Settings_SaveSettings(void);
 
 #endif //__WZBLUE_H__
