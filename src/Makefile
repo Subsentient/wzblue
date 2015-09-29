@@ -1,7 +1,7 @@
 GTKCHOICE = 2
 PKGCONFIG = pkg-config
 CFLAGS = -std=gnu99 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0`
-LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0`
+LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` substrings/libsubstrings.a
 OUTFILE = ../wzblue
 OBJECTS = wz.o netcore.o main.o gui.o settings.o
 STRIP = strip
@@ -14,6 +14,7 @@ ifeq ($(OS),WIN)
 endif
 	
 all:
+	$(MAKE) -C substrings static
 	$(CC) wz.c -c $(CFLAGS)
 	$(CC) netcore.c -c $(CFLAGS)
 	$(CC) main.c -c $(CFLAGS)
@@ -22,6 +23,7 @@ all:
 	$(CC) $(OBJECTS) -o $(OUTFILE) $(CFLAGS) $(LDFLAGS)
 
 clean:
+	$(MAKE) -C substrings clean
 	rm -f *.o *.gch
 
 stripbin:
