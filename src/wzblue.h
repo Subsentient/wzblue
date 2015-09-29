@@ -139,5 +139,6 @@ void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Ch
 void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting);
+void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax);
 
 #endif //__WZBLUE_H__

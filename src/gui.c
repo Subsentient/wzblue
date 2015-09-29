@@ -562,15 +562,7 @@ static void GUI_LaunchGame(const char *IP)
 	
 	exit(1);
 
-#else //WINDOWS CODE!!
-    STARTUPINFO StartupInfo;
-    PROCESS_INFORMATION ProcessInfo;
-    
-    memset(&StartupInfo, 0, sizeof StartupInfo);
-    memset(&ProcessInfo, 0, sizeof ProcessInfo);
-    
-    StartupInfo.cb = sizeof StartupInfo;
-    
+#else //WINDOWS CODE!!    
     char IPFormat[128] = "--join=";
     char WZExecutable[2048];
     
@@ -591,6 +583,13 @@ static void GUI_LaunchGame(const char *IP)
 	strcat(WZExecutable, " ");
 	strcat(WZExecutable, IPFormat);
 	
+    STARTUPINFO StartupInfo;
+    PROCESS_INFORMATION ProcessInfo;
+    
+    memset(&StartupInfo, 0, sizeof StartupInfo);
+    memset(&ProcessInfo, 0, sizeof ProcessInfo);
+    
+    StartupInfo.cb = sizeof StartupInfo;
 	//Launch it
 	const gboolean Worked = CreateProcess(NULL, WZExecutable, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
 	

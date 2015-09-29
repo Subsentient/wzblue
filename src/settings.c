@@ -10,12 +10,18 @@ See the included file UNLICENSE.TXT for more information.
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "wzblue.h"
+#include "substrings/substrings.h"
 
 #define CONFIGFILE "wzblueconfig.bin"
+
+//Globals
 struct Settings Settings;
 enum SettingsChoice DefaultChoices[] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
 
+//Prototypes
+static int Settings_GetIndiceFromChoice(enum SettingsChoice Setting);
 
+//Functions
 gboolean Settings_ReadSettings(void)
 {
 	struct stat Stat;
@@ -113,3 +119,88 @@ void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsCho
 	gtk_toggle_button_set_active((GtkToggleButton*)RadioButtons[Settings_GetIndiceFromChoice(Setting)], TRUE);
 }
 
+void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
+{
+	switch (Settings.Sound)
+	{
+		case CHOICE_NO:
+		{
+			SubStrings.Cat(Out, "--nosound ", OutMax);
+			break;
+		}
+		case CHOICE_YES:
+		{
+			SubStrings.Cat(Out, "--sound ", OutMax);
+			break;
+		}
+		default:
+			break;
+	}
+	
+	switch (Settings.Shadows)
+	{
+		case CHOICE_NO:
+		{
+			SubStrings.Cat(Out, "--noshadows ", OutMax);
+			break;
+		}
+		case CHOICE_YES:
+		{
+			SubStrings.Cat(Out, "--shadows ", OutMax);
+			break;
+		}
+		default:
+			break;
+	}
+	
+	switch (Settings.Fullscreen)
+	{
+		case CHOICE_NO:
+		{
+			SubStrings.Cat(Out, "--window ", OutMax);
+			break;
+		}
+		case CHOICE_YES:
+		{
+			SubStrings.Cat(Out, "--fullscreen ", OutMax);
+			break;
+		}
+		default:
+			break;
+	}
+	
+	switch (Settings.TextureCompression)
+	{
+		case CHOICE_NO:
+		{
+			SubStrings.Cat(Out, "--texturecompression ", OutMax);
+			break;
+		}
+		case CHOICE_YES:
+		{
+			SubStrings.Cat(Out, "--notexturecompression ", OutMax);
+			break;
+		}
+		default:
+			break;
+	}
+	
+	if (Settings.Shaders == CHOICE_NO)
+	{
+		SubStrings.Cat(Out, "--noshaders ", OutMax);
+	}
+	
+	if (Settings.VBOS == CHOICE_NO)
+	{
+		SubStrings.Cat(Out, "--novbos ", OutMax);
+	}
+	
+	if (Settings.Resolution.Width && Settings.Resolution.Height)
+	{
+		char Append[256];
+		
+		snprintf(Append, sizeof Append, "--resolution=%ux%u ", Settings.Resolution.Width, Settings.Resolution.Height);
+		SubStrings.Cat(Out, Append, OutMax);
+	}
+	
+}
