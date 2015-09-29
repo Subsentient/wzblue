@@ -355,12 +355,15 @@ static void GUI_DrawSettingsDialog(void)
 	GtkWidget *BinaryChooserLabel = gtk_label_new("Warzone 2100 binary");
 	GtkWidget *BinaryChooser = gtk_file_chooser_button_new("Select Warzone 2100 binary", GTK_FILE_CHOOSER_ACTION_OPEN);
 	
-	char WZBinary[1024];
-	gboolean AutoFoundBinary = GUI_FindWZExecutable(WZBinary, sizeof WZBinary);
+	char WZBinary[1024] = "file://";
+	const gboolean AutoDetectedBinary = GUI_FindWZExecutable(WZBinary + sizeof "file://" - 1, sizeof WZBinary - (sizeof "file://" - 1));
 	
-	if (*Settings.WZBinary || AutoFoundBinary)
+	if (*Settings.WZBinary || AutoDetectedBinary)
 	{ //Set default file.
-		gtk_file_chooser_set_uri((GtkFileChooser*)BinaryChooser, *Settings.WZBinary ? Settings.WZBinary : WZBinary);
+		if (!gtk_file_chooser_set_uri((GtkFileChooser*)BinaryChooser, *Settings.WZBinary ? Settings.WZBinary : WZBinary))
+		{
+			fputs("BinaryChooser URI change failed.\n", stderr);
+		}
 	}
 	
 	g_signal_connect((GObject*)BinaryChooser, "file-set", (GCallback)Settings_SetBinary, NULL);
@@ -386,7 +389,7 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	Settings_RadioButtonInit(RadioButtons, &Settings.Sound);
+	Settings_RadioButtonInit(RadioButtons, Settings.Sound);
 	
 	gtk_table_attach((GtkTable*)Table, SoundLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
@@ -408,7 +411,7 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	Settings_RadioButtonInit(RadioButtons, &Settings.Shadows);
+	Settings_RadioButtonInit(RadioButtons, Settings.Shadows);
 	
 	gtk_table_attach((GtkTable*)Table, ShadowLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
@@ -431,7 +434,7 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	Settings_RadioButtonInit(RadioButtons, &Settings.TextureCompression);
+	Settings_RadioButtonInit(RadioButtons, Settings.TextureCompression);
 	
 	gtk_table_attach((GtkTable*)Table, TextureCompressLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
@@ -455,7 +458,7 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	Settings_RadioButtonInit(RadioButtons, &Settings.Shaders);
+	Settings_RadioButtonInit(RadioButtons, Settings.Shaders);
 	
 	gtk_table_attach((GtkTable*)Table, ShadersLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
@@ -481,7 +484,7 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	Settings_RadioButtonInit(RadioButtons, &Settings.VBOS);
+	Settings_RadioButtonInit(RadioButtons, Settings.VBOS);
 	
 	gtk_table_attach((GtkTable*)Table, VBOSLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
@@ -523,9 +526,9 @@ static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
 #ifndef WIN
 
-	char WZExecutable[2048];
+	char WZBinary[2048];
     
-    if (!GUI_FindWZExecutable(WZExecutable, sizeof WZExecutable))
+    if (!GUI_FindWZExecutable(WZBinary, sizeof WZBinary) && !*Settings.WZBinary)
     {
 		GUI_DrawLaunchFailure();
 		return;
@@ -555,7 +558,7 @@ static void GUI_LaunchGame(const char *IP)
 		strcat(IPFormat, IP);
 	}
 	
-	execlp(WZExecutable, "warzone2100", IPFormat, NULL);
+	execlp(*Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, "warzone2100", IPFormat, NULL);
 	
 	exit(1);
 

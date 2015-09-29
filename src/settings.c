@@ -108,8 +108,8 @@ static int Settings_GetIndiceFromChoice(enum SettingsChoice Setting)
 	return 0; //If all else fails we assume unspecified.
 }
 
-void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], enum SettingsChoice *Setting)
+void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting)
 {
-	gtk_toggle_button_set_active((GtkToggleButton*)RadioButtons[Settings_GetIndiceFromChoice(*Setting)], TRUE);
+	gtk_toggle_button_set_active((GtkToggleButton*)RadioButtons[Settings_GetIndiceFromChoice(Setting)], TRUE);
 }
 
