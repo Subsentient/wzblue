@@ -35,6 +35,7 @@ static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
+	Settings_SaveSettings();
 	gtk_main_quit();
 	exit(0);
 }
@@ -353,6 +354,17 @@ static void GUI_DrawSettingsDialog(void)
 	//Choose Warzone binary
 	GtkWidget *BinaryChooserLabel = gtk_label_new("Warzone 2100 binary");
 	GtkWidget *BinaryChooser = gtk_file_chooser_button_new("Select Warzone 2100 binary", GTK_FILE_CHOOSER_ACTION_OPEN);
+	
+	char WZBinary[1024];
+	gboolean AutoFoundBinary = GUI_FindWZExecutable(WZBinary, sizeof WZBinary);
+	
+	if (*Settings.WZBinary || AutoFoundBinary)
+	{ //Set default file.
+		gtk_file_chooser_set_uri((GtkFileChooser*)BinaryChooser, *Settings.WZBinary ? Settings.WZBinary : WZBinary);
+	}
+	
+	g_signal_connect((GObject*)BinaryChooser, "file-set", (GCallback)Settings_SetBinary, NULL);
+	
 	GtkWidget *BinaryChooserSep = gtk_vseparator_new();
 	GtkWidget *BinaryChooserLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
 	gtk_container_add((GtkContainer*)BinaryChooserLabelAlign, BinaryChooserLabel);
@@ -374,12 +386,18 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
+	Settings_RadioButtonInit(RadioButtons, &Settings.Sound);
+	
 	gtk_table_attach((GtkTable*)Table, SoundLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetSound, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetSound, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetSound, DefaultChoices + 2);
 	
 	++Row;
 	
@@ -390,12 +408,18 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
+	Settings_RadioButtonInit(RadioButtons, &Settings.Shadows);
+	
 	gtk_table_attach((GtkTable*)Table, ShadowLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetShadows, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetShadows, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetShadows, DefaultChoices + 2);
 
 	++Row;
 	
@@ -407,6 +431,8 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
+	Settings_RadioButtonInit(RadioButtons, &Settings.TextureCompression);
+	
 	gtk_table_attach((GtkTable*)Table, TextureCompressLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 
@@ -414,6 +440,10 @@ static void GUI_DrawSettingsDialog(void)
 	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetTextureCompress, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetTextureCompress, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetTextureCompress, DefaultChoices + 2);
 
 	++Row;
 	
@@ -425,6 +455,8 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
+	Settings_RadioButtonInit(RadioButtons, &Settings.Shaders);
+	
 	gtk_table_attach((GtkTable*)Table, ShadersLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
@@ -434,6 +466,10 @@ static void GUI_DrawSettingsDialog(void)
 
 	//Disable the yes button
 	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetShaders, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetShaders, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetShaders, DefaultChoices + 2);
 	
 	++Row;
 	
@@ -445,6 +481,8 @@ static void GUI_DrawSettingsDialog(void)
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
+	Settings_RadioButtonInit(RadioButtons, &Settings.VBOS);
+	
 	gtk_table_attach((GtkTable*)Table, VBOSLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
@@ -454,6 +492,10 @@ static void GUI_DrawSettingsDialog(void)
 
 	//Disable the yes button
 	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices + 2);
 	
 	++Row;
 

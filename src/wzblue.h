@@ -76,7 +76,7 @@ struct Settings
 /*DON'T PUT POINTERS IN HERE!
 * it gets written to a file as configuration!
 */
-	char WarzoneBinaryPath[1024];
+	char WZBinary[1024]; //Full path to the executable for Warzone 2100
 	struct
 	{
 		unsigned Width;
@@ -103,6 +103,7 @@ extern unsigned RefreshRate;
 extern struct GooeyGuts GuiInfo;
 extern gboolean True, False;
 extern struct Settings Settings;
+extern enum SettingsChoice DefaultChoices[];
 
 /*main.c*/
 gboolean Main_LoopFunc(gboolean *ViaLoop);
@@ -131,5 +132,12 @@ gboolean GUI_CheckSlider(void);
 /*settings.c*/
 gboolean Settings_ReadSettings(void);
 gboolean Settings_SaveSettings(void);
+void Settings_SetBinary(GtkFileChooserButton *Button);
+void Settings_SetSound(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetShadows(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], enum SettingsChoice *Setting);
 
 #endif //__WZBLUE_H__
