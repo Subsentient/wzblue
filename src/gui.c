@@ -96,6 +96,7 @@ static void GUI_LoadIcons(void)
 void GTK_NukeWidget(GtkWidget *Widgy)
 {
 	GTK_NukeContainerChildren((GtkContainer*)Widgy);
+		
 	gtk_widget_destroy(Widgy);
 }
 
@@ -195,17 +196,21 @@ void GUI_DrawMenus()
 	//Items for the file menu
 	GtkWidget *Item_Quit = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, AccelGroup);
 	GtkWidget *Item_Refresh = gtk_image_menu_item_new_from_stock(GTK_STOCK_REFRESH, AccelGroup);
+	GtkWidget *Item_Preferences = gtk_image_menu_item_new_from_stock(GTK_STOCK_PREFERENCES, AccelGroup);
 	
 	//Set up accelerator for Refresh (F5)
 	gtk_widget_add_accelerator(Item_Refresh, "activate", AccelGroup, 0xffc2 ,0, GTK_ACCEL_VISIBLE);
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
+	g_signal_connect(G_OBJECT(Item_Preferences), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
 	g_signal_connect(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, NULL);
 	
 	g_signal_connect_swapped(G_OBJECT(Item_Refresh), "activate", (GCallback)Main_LoopFunc, &False);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(HelpMenu), Item_About);
+	
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Refresh);
+	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Preferences);
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Quit);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(MenuBar), FileTag);
@@ -323,101 +328,142 @@ static void GUI_CreateRadioButtonGroup(const unsigned Count, const char *const N
 static void GUI_DrawSettingsDialog(void)
 {
 	GtkWidget *Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_size_request((GtkWidget*)Win, 600, -1);
 	
 	//Connect the destroy signal
-	g_signal_connect(G_OBJECT(Win), "destroy", (GCallback)GTK_NukeWidget, NULL);
+	g_signal_connect((GObject*)Win, "destroy", (GCallback)GTK_NukeWidget, NULL);
 
 	//Window settings
 	gtk_window_set_type_hint((GtkWindow*)Win, GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_window_set_skip_taskbar_hint((GtkWindow*)Win, TRUE);
 	gtk_window_set_resizable((GtkWindow*)Win, FALSE);
-	gtk_window_set_title(GTK_WINDOW(Win), "Settings");
-
-	GtkWidget *VBox = gtk_vbox_new(FALSE, 15);
+	gtk_window_set_title((GtkWindow*)Win, "Settings");
+	gtk_container_set_border_width((GtkContainer*)Win, 5);
 	
-	gtk_container_add((GtkContainer*)Win, VBox);
+	GtkWidget *Table = gtk_table_new(20, 5, FALSE);
+	
+	gtk_container_add((GtkContainer*)Win, Table);
 	
 	//Main window label and the separator.
 	GtkWidget *Label = gtk_label_new("Game launch options");
 	
-	gtk_box_pack_start((GtkBox*)VBox, Label, TRUE, FALSE, 10);
-	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
-
+	gtk_table_attach((GtkTable*)Table, Label, 0, 5, 0, 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, 1, 2, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
 	///Options
+	//Choose Warzone binary
+	GtkWidget *BinaryChooserLabel = gtk_label_new("Warzone 2100 binary");
+	GtkWidget *BinaryChooser = gtk_file_chooser_button_new("Select Warzone 2100 binary", GTK_FILE_CHOOSER_ACTION_OPEN);
+	GtkWidget *BinaryChooserSep = gtk_vseparator_new();
+	GtkWidget *BinaryChooserLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	gtk_container_add((GtkContainer*)BinaryChooserLabelAlign, BinaryChooserLabel);
+	
+	gtk_table_attach((GtkTable*)Table, BinaryChooserLabelAlign, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, BinaryChooserSep, 1, 2, 2, 3, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, BinaryChooser, 2, 5, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+
+	
+	//Radio buttons
 	GtkWidget *RadioButtons[3] = { NULL };
 	const char *const RadioLabels[3] = { "Unspecified", "No", "Yes" };
-	static const enum SettingsChoice States[3] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
-	
-	unsigned Inc = 0;
+	unsigned Row = 3;
 	
 	//Sound
-	GtkWidget *SoundAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
-	GtkWidget *SoundHBox = gtk_hbox_new(FALSE, 4);
-	
-	gtk_container_add((GtkContainer*)SoundAlign, SoundHBox);
-	
 	GtkWidget *SoundLabel = gtk_label_new("Enable sound");
-	GtkWidget *SoundSep = gtk_vseparator_new();
+	GtkWidget *SoundLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	gtk_container_add((GtkContainer*)SoundLabelAlign, SoundLabel);
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	gtk_box_pack_start((GtkBox*)SoundHBox, SoundLabel, FALSE, FALSE, 0);
-	gtk_box_pack_start((GtkBox*)SoundHBox, SoundSep, FALSE, FALSE, 0);
+	gtk_table_attach((GtkTable*)Table, SoundLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
-	for (Inc = 0; Inc < 3; ++Inc)
-	{
-		gtk_box_pack_start((GtkBox*)SoundHBox, RadioButtons[Inc], FALSE, FALSE, 0);
-	}
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
 	
-	gtk_box_pack_start((GtkBox*)VBox, SoundAlign, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	++Row;
 	
 	//Shadows
-	GtkWidget *ShadowAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
-	GtkWidget *ShadowHBox = gtk_hbox_new(FALSE, 4);
-	
-	gtk_container_add((GtkContainer*)ShadowAlign, ShadowHBox);
-	
 	GtkWidget *ShadowLabel = gtk_label_new("Enable shadows");
-	GtkWidget *ShadowSep = gtk_vseparator_new();
+	GtkWidget *ShadowLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	gtk_container_add((GtkContainer*)ShadowLabelAlign, ShadowLabel);
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	gtk_box_pack_start((GtkBox*)ShadowHBox, ShadowLabel, FALSE, FALSE, 0);
-	gtk_box_pack_start((GtkBox*)ShadowHBox, ShadowSep, FALSE, FALSE, 0);
-
-	for (Inc = 0; Inc < 3; ++Inc)
-	{
-		gtk_box_pack_start((GtkBox*)ShadowHBox, RadioButtons[Inc], FALSE, FALSE, 0);
-	}
+	gtk_table_attach((GtkTable*)Table, ShadowLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 	
-	gtk_box_pack_start((GtkBox*)VBox, ShadowAlign, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+
+	++Row;
 	
 	//Texture compression
-	GtkWidget *TextureCompressAlign = gtk_alignment_new(1.0, 0.5, 0.1, 0.1);
-	GtkWidget *TextureCompressHBox = gtk_hbox_new(FALSE, 4);
-	
-	gtk_container_add((GtkContainer*)TextureCompressAlign, TextureCompressHBox);
-	
 	GtkWidget *TextureCompressLabel = gtk_label_new("Enable texture compression");
-	GtkWidget *TextureCompressSep = gtk_vseparator_new();
+	GtkWidget *TextureCompressLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	
+	gtk_container_add((GtkContainer*)TextureCompressLabelAlign, TextureCompressLabel);
 	
 	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
 	
-	gtk_box_pack_start((GtkBox*)TextureCompressHBox, TextureCompressLabel, FALSE, FALSE, 0);
-	gtk_box_pack_start((GtkBox*)TextureCompressHBox, TextureCompressSep, TRUE, TRUE, 0);
+	gtk_table_attach((GtkTable*)Table, TextureCompressLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
 
-	for (Inc = 0; Inc < 3; ++Inc)
-	{
-		gtk_box_pack_start((GtkBox*)TextureCompressHBox, RadioButtons[Inc], FALSE, FALSE, 0);
-	}
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+
+	++Row;
 	
-	gtk_box_pack_start((GtkBox*)VBox, TextureCompressAlign, TRUE, TRUE, 0);
-	gtk_box_pack_start((GtkBox*)VBox, gtk_hseparator_new(), FALSE, FALSE, 0);
+	//Shaders
+	GtkWidget *ShadersLabel = gtk_label_new("Enable shaders");
+	GtkWidget *ShadersLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
 	
+	gtk_container_add((GtkContainer*)ShadersLabelAlign, ShadersLabel);
+	
+	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
+	
+	gtk_table_attach((GtkTable*)Table, ShadersLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+
+	//Disable the yes button
+	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
+	
+	++Row;
+	
+	//VBOS
+	GtkWidget *VBOSLabel = gtk_label_new("Enable OpenGL VBOS");
+	GtkWidget *VBOSLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	
+	gtk_container_add((GtkContainer*)VBOSLabelAlign, VBOSLabel);
+	
+	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
+	
+	gtk_table_attach((GtkTable*)Table, VBOSLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+
+	//Disable the yes button
+	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
+	
+	++Row;
+
+	//Close button
+	GtkWidget *CloseButton = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
+	GtkWidget *CloseButtonAlign = gtk_alignment_new(1.0, 1.0, 0.01, 0.01);
+	
+	gtk_container_add((GtkContainer*)CloseButtonAlign, CloseButton);
+	g_signal_connect_swapped(G_OBJECT(CloseButton), "clicked", (GCallback)GTK_NukeWidget, Win);
+	gtk_table_attach((GtkTable*)Table, CloseButtonAlign, 4, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 0, 0);
 
 	///Draw it all
 	gtk_widget_show_all(Win);
@@ -623,7 +669,16 @@ static void GTK_NukeContainerChildren(GtkContainer *Container)
 	GList *Children = gtk_container_get_children(Container);
 	GList *Worker = Children;
 	
-	if (!GTK_IS_CONTAINER(Container)) return;
+	if (!GTK_IS_CONTAINER(Container))
+	{
+		return;
+	}
+	
+	if (GTK_IS_FILE_CHOOSER_BUTTON(Container))
+	{
+		gtk_widget_destroy((GtkWidget*)Container);
+		return;
+	}
 	
 	for (; Worker; Worker = g_list_next(Worker))
 	{
