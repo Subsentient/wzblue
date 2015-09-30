@@ -94,6 +94,14 @@ struct Settings
 	enum SettingsChoice Reserved2;
 	enum SettingsChoice Reserved3;
 	enum SettingsChoice Reserved4;
+	
+	//Color themes.
+	struct
+	{
+		char Name[32];
+		char Map[32];
+		char Host[32];
+	} Colors;
 
 }; //All additions to this structure must come *after* the last item. This ensures compatibility with future versions.
 
@@ -141,6 +149,9 @@ void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetFullscreen(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes);
 void Settings_ClearResolution(GtkWidget *Button, GtkWidget **Boxes);
+void Settings_Color_SetNameColor(GtkWidget *Entry);
+void Settings_Color_SetMapColor(GtkWidget *Entry);
+void Settings_Color_SetHostColor(GtkWidget *Entry);
 void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting);
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax);
 #endif //__WZBLUE_H__

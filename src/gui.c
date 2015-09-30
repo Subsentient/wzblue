@@ -577,14 +577,103 @@ static void GUI_DrawSettingsDialog(void)
 	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices + 2);
 	
 	++Row;
+	
+	
+	///Color options
+	
+	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	++Row;
+	gtk_table_attach((GtkTable*)Table, gtk_label_new("Color options"), 0, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	++Row;
+	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	++Row;
+	
+	
+	//Name color
+	GtkWidget *NameLabel = gtk_label_new("Color for game name");
+	GtkWidget *NameLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	GtkWidget *NameSep = gtk_vseparator_new();
+	GtkWidget *NameColor = gtk_entry_new();
+	gtk_entry_set_text((GtkEntry*)NameColor, Settings.Colors.Name);
+	
+	gtk_widget_set_size_request(NameColor, 70, -1);
+	
+	GtkWidget *NameHBox = gtk_hbox_new(FALSE, 2);
+	GtkWidget *NameColorAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	gtk_container_add((GtkContainer*)NameColorAlign, NameHBox);
 
+	GtkWidget *NameButton = gtk_button_new_with_label("Save");
+	g_signal_connect_swapped((GObject*)NameButton, "clicked", (GCallback)Settings_Color_SetNameColor, NameColor);
+	gtk_box_pack_start((GtkBox*)NameHBox, NameColor, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)NameHBox, NameButton, FALSE, FALSE, 0);
+
+	
+	gtk_container_add((GtkContainer*)NameLabelAlign, NameLabel);
+	
+	gtk_table_attach((GtkTable*)Table, NameLabelAlign, 0, 1, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, NameSep, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, NameColorAlign, 2, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+
+	++Row;
+	//Map color
+	GtkWidget *MapColor = gtk_entry_new();
+	gtk_entry_set_text((GtkEntry*)MapColor, Settings.Colors.Map);
+	
+	gtk_widget_set_size_request(MapColor, 70, -1);
+	GtkWidget *MapHBox = gtk_hbox_new(FALSE, 2);
+	GtkWidget *MapColorAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	gtk_container_add((GtkContainer*)MapColorAlign, MapHBox);
+
+	GtkWidget *MapLabel = gtk_label_new("Color for map name");
+	GtkWidget *MapLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	GtkWidget *MapSep = gtk_vseparator_new();
+	GtkWidget *MapButton = gtk_button_new_with_label("Save");
+	g_signal_connect_swapped((GObject*)MapButton, "clicked", (GCallback)Settings_Color_SetMapColor, MapColor);
+	gtk_box_pack_start((GtkBox*)MapHBox, MapColor, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)MapHBox, MapButton, FALSE, FALSE, 0);
+	
+	gtk_container_add((GtkContainer*)MapLabelAlign, MapLabel);
+	
+	gtk_table_attach((GtkTable*)Table, MapLabelAlign, 0, 1, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, MapSep, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, MapColorAlign, 2, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	
+	++Row;
+	//Host name color
+	GtkWidget *HostColor = gtk_entry_new();
+	gtk_entry_set_text((GtkEntry*)HostColor, Settings.Colors.Host);
+	
+	GtkWidget *HostHBox = gtk_hbox_new(FALSE, 2);
+	gtk_widget_set_size_request(HostColor, 70, -1);
+	
+	GtkWidget *HostColorAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	gtk_container_add((GtkContainer*)HostColorAlign, HostHBox);
+
+	GtkWidget *HostLabel = gtk_label_new("Color for the host");
+	GtkWidget *HostLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	GtkWidget *HostSep = gtk_vseparator_new();
+	GtkWidget *HostButton = gtk_button_new_with_label("Save");
+	
+	g_signal_connect_swapped((GObject*)HostButton, "clicked", (GCallback)Settings_Color_SetHostColor, HostColor);
+	gtk_box_pack_start((GtkBox*)HostHBox, HostColor, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)HostHBox, HostButton, FALSE, FALSE, 0);
+	
+	gtk_container_add((GtkContainer*)HostLabelAlign, HostLabel);
+	
+	gtk_table_attach((GtkTable*)Table, HostLabelAlign, 0, 1, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, HostSep, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, HostColorAlign, 2, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	++Row;
+	
 	//Close button
+	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	++Row;
 	GtkWidget *CloseButton = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
 	GtkWidget *CloseButtonAlign = gtk_alignment_new(1.0, 1.0, 0.01, 0.01);
 	
 	gtk_container_add((GtkContainer*)CloseButtonAlign, CloseButton);
 	g_signal_connect_swapped(G_OBJECT(CloseButton), "clicked", (GCallback)GTK_NukeWidget, Win);
-	gtk_table_attach((GtkTable*)Table, CloseButtonAlign, 4, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 0, 0);
+	gtk_table_attach((GtkTable*)Table, CloseButtonAlign, 4, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 	///Draw it all
 	gtk_widget_show_all(Win);
@@ -929,12 +1018,13 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		}
 		
 		
-		snprintf(OutBuf, sizeof OutBuf, "Name: <b><span foreground=\"#009bff\">%s</span></b> | "
-									"Map: <b><span foreground=\"#00bb00\">%s</span></b>%s | "
-									"Host: <b><span foreground=\"#ff8300\">%s</span></b>\n"
-									"Players: <b>%d/%d</b> %s| IP: <b>%s</b> | Version: <b>%s</b>%s",
-				GamesList[Inc].GameName, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
-				GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
+		snprintf(OutBuf, sizeof OutBuf,
+				"Name: <b><span foreground=\"%s\">%s</span></b> | "
+				"Map: <b><span foreground=\"%s\">%s</span></b>%s | "
+				"Host: <b><span foreground=\"%s\">%s</span></b>\n"
+				"Players: <b>%d/%d</b> %s| IP: <b>%s</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
+				GamesList[Inc].GameName, Settings.Colors.Map, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
+				Settings.Colors.Host, GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
 				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].NetSpecs.HostIP,
 				GamesList[Inc].VersionString, ModString);
 				

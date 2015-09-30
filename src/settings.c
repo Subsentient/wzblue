@@ -15,7 +15,7 @@ See the included file UNLICENSE.TXT for more information.
 #define CONFIGFILE "wzblueconfig.bin"
 
 //Globals
-struct Settings Settings;
+struct Settings Settings = { .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
 enum SettingsChoice DefaultChoices[] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
 
 //Prototypes
@@ -150,6 +150,21 @@ static int Settings_GetIndiceFromChoice(enum SettingsChoice Setting)
 void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting)
 {
 	gtk_toggle_button_set_active((GtkToggleButton*)RadioButtons[Settings_GetIndiceFromChoice(Setting)], TRUE);
+}
+
+void Settings_Color_SetNameColor(GtkWidget *Entry)
+{
+	SubStrings.Copy(Settings.Colors.Name, gtk_entry_get_text((GtkEntry*)Entry), sizeof Settings.Colors.Name);
+}
+
+void Settings_Color_SetMapColor(GtkWidget *Entry)
+{
+	SubStrings.Copy(Settings.Colors.Map, gtk_entry_get_text((GtkEntry*)Entry), sizeof Settings.Colors.Map);
+}
+
+void Settings_Color_SetHostColor(GtkWidget *Entry)
+{
+	SubStrings.Copy(Settings.Colors.Host, gtk_entry_get_text((GtkEntry*)Entry), sizeof Settings.Colors.Host);
 }
 
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
