@@ -370,8 +370,20 @@ static void GUI_DrawSettingsDialog(void)
 	GtkWidget *BinaryChooserLabel = gtk_label_new("Warzone 2100 binary");
 	GtkWidget *BinaryChooser = gtk_file_chooser_button_new("Select Warzone 2100 binary", GTK_FILE_CHOOSER_ACTION_OPEN);
 	
+#ifdef WIN
+	char WZBinary[1024] = "file:///";
+	const gboolean AutoDetectedBinary = GUI_FindWZExecutable(WZBinary + sizeof "file:///" - 1, sizeof WZBinary - (sizeof "file:///" - 1));
+#else
 	char WZBinary[1024] = "file://";
 	const gboolean AutoDetectedBinary = GUI_FindWZExecutable(WZBinary + sizeof "file://" - 1, sizeof WZBinary - (sizeof "file://" - 1));
+#endif
+
+	char *TmpBuf = malloc(sizeof WZBinary * 2);
+	SubStrings.Replace(WZBinary, TmpBuf, sizeof WZBinary, " ", "%20");
+#ifdef WIN
+	SubStrings.Replace(WZBinary, TmpBuf, sizeof WZBinary, "\\", "/");
+#endif
+	free(TmpBuf);
 	
 	if (*Settings.WZBinary || AutoDetectedBinary)
 	{ //Set default file.
@@ -908,7 +920,7 @@ static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 	return FALSE;
 #else
 	const char *ProgDir = getenv("programfiles");
-	puts(ProgDir);
+
 	DIR *Folder = opendir(ProgDir);
 	struct dirent *File = NULL;
 	
