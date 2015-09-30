@@ -116,6 +116,8 @@ void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes)
 	{
 		Settings.Resolution.Width = 0;
 		Settings.Resolution.Height = 0;
+		gtk_entry_set_text((GtkEntry*)Boxes[0], "");
+		gtk_entry_set_text((GtkEntry*)Boxes[1], "");
 		return;
 	}
 	Settings.Resolution.Width = atoi(Width);
