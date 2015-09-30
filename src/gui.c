@@ -11,6 +11,7 @@ See the included file UNLICENSE.TXT for more information.
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 #include "wzblue.h"
+#include "substrings/substrings.h"
 #include "icons.h"
 
 #ifdef WIN
@@ -526,13 +527,16 @@ static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
 #ifndef WIN
 
-	char WZBinary[2048];
-    
+	char ExtraOptions[4096] = { '\0' };
+	char WZBinary[1024];
+	
     if (!GUI_FindWZExecutable(WZBinary, sizeof WZBinary) && !*Settings.WZBinary)
     {
 		GUI_DrawLaunchFailure();
 		return;
     }
+	
+	Settings_AppendOptionsToLaunch(ExtraOptions, sizeof ExtraOptions);
 	
 	pid_t PID = fork();
 	
@@ -542,46 +546,98 @@ static void GUI_LaunchGame(const char *IP)
 		return;
 	}
 	
+	
+	///Parent code
 	if (PID != 0)
 	{
 		signal(SIGCHLD, SIG_IGN);
 		return;
 	}
-
+	
+	
+	///Child code
+	//1 extra to null terminate the array, 1 for the binary, and 1 for join or host parameter.
+	char **Argv = calloc(23, sizeof(char*));
+	
+	unsigned Inc = 0;
+	
+	//THe binary and the host/join option need to be allocated by us.
+	Argv[0] = calloc(256, 1);
+	Argv[1] = calloc(256, 1);
+	
 	char IPFormat[128] = "--join=";
 	if (IP == NULL)
 	{
-		strcpy(IPFormat, "--host");
+		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
 	}
 	else
 	{
-		strcat(IPFormat, IP);
+		SubStrings.Cat(IPFormat, IP, sizeof IPFormat);
 	}
 	
-	execlp(*Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, "warzone2100", IPFormat, NULL);
+	//Copy in the binary path.
+	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, 256);
+	//Copy in the host or join parameter,
+	SubStrings.Copy(Argv[1], IPFormat, 256);
+	
+	const char *Iter = ExtraOptions;
+	
+	char Temp[256];
+	//Break it up into argv format.
+	for (Inc = 2; Inc < 20 && SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
+	{
+		Argv[Inc] = strdup(Temp);
+	}
+	
+	///We don't bother freeing anything because we're going to exec() it away anyways
+	
+	//Do the exec
+	execvp(*Argv, Argv);
 	
 	exit(1);
 
 #else //WINDOWS CODE!!    
-    char IPFormat[128] = "--join=";
-    char WZExecutable[2048];
+    char WZString[2048];
     
-    if (!GUI_FindWZExecutable(WZExecutable, sizeof WZExecutable))
+    if (!GUI_FindWZExecutable(WZString, sizeof WZString) && !*Settings.WZBinary)
     {
 		GUI_DrawLaunchFailure();
 		return;
     }
+    
+    if (*Settings.WZBinary)
+    {
+		SubStrings.Copy(WZString,  Settings.WZBinary + sizeof "file:///" - 1, sizeof WZString);
+		char *TempBuf = malloc(sizeof WZString * 2);
+		
+		SubStrings.Replace(WZString, TempBuf, sizeof WZString, "%20", " ");
+		SubStrings.Replace(WZString, TempBuf, sizeof WZString, "/", "\\");
+		free(TempBuf);
+		
+		FILE *Desc = fopen("arg0.txt", "w");
+		
+		if (Desc)
+		{
+			fputs(WZString, Desc);
+			fclose(Desc);
+		}
+	}
+	
+    char IPFormat[128] = "--join=";
 	if (IP == NULL)
 	{
-		strcpy(IPFormat, "--host");
+		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
 	}
 	else
 	{
-		strcat(IPFormat, IP);
+		SubStrings.Cat(IPFormat, IP, sizeof IPFormat);
 	}
 	
-	strcat(WZExecutable, " ");
-	strcat(WZExecutable, IPFormat);
+	SubStrings.Cat(WZString, " ", sizeof WZString);
+	SubStrings.Cat(WZString, IPFormat, sizeof WZString);
+	SubStrings.Cat(WZString, " ", sizeof WZString);
+
+	Settings_AppendOptionsToLaunch(WZString, sizeof WZString);
 	
     STARTUPINFO StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
@@ -591,7 +647,7 @@ static void GUI_LaunchGame(const char *IP)
     
     StartupInfo.cb = sizeof StartupInfo;
 	//Launch it
-	const gboolean Worked = CreateProcess(NULL, WZExecutable, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
+	const gboolean Worked = CreateProcess(NULL, WZString, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
 	
 	CloseHandle(ProcessInfo.hProcess);
 	CloseHandle(ProcessInfo.hThread);

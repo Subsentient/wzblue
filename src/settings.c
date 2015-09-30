@@ -120,7 +120,7 @@ void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsCho
 }
 
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
-{
+{	
 	switch (Settings.Sound)
 	{
 		case CHOICE_NO:
@@ -173,12 +173,12 @@ void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
 	{
 		case CHOICE_NO:
 		{
-			SubStrings.Cat(Out, "--texturecompression ", OutMax);
+			SubStrings.Cat(Out, "--notexturecompression ", OutMax);
 			break;
 		}
 		case CHOICE_YES:
 		{
-			SubStrings.Cat(Out, "--notexturecompression ", OutMax);
+			SubStrings.Cat(Out, "--texturecompression ", OutMax);
 			break;
 		}
 		default:
