@@ -198,13 +198,16 @@ void GUI_DrawMenus()
 	//Items for the file menu
 	GtkWidget *Item_Quit = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, AccelGroup);
 	GtkWidget *Item_Refresh = gtk_image_menu_item_new_from_stock(GTK_STOCK_REFRESH, AccelGroup);
-	GtkWidget *Item_Preferences = gtk_image_menu_item_new_from_stock(GTK_STOCK_PREFERENCES, AccelGroup);
+	GtkWidget *Item_Settings = gtk_image_menu_item_new_with_mnemonic("_Settings");
+	GtkWidget *Item_Settings_Image = gtk_image_new_from_stock(GTK_STOCK_PREFERENCES, GTK_ICON_SIZE_MENU);
+	
+	g_object_set((GObject*)Item_Settings, "image", Item_Settings_Image, NULL);
 	
 	//Set up accelerator for Refresh (F5)
 	gtk_widget_add_accelerator(Item_Refresh, "activate", AccelGroup, 0xffc2 ,0, GTK_ACCEL_VISIBLE);
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
-	g_signal_connect(G_OBJECT(Item_Preferences), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
+	g_signal_connect(G_OBJECT(Item_Settings), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
 	g_signal_connect(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, NULL);
 	
 	g_signal_connect_swapped(G_OBJECT(Item_Refresh), "activate", (GCallback)Main_LoopFunc, &False);
@@ -212,7 +215,7 @@ void GUI_DrawMenus()
 	gtk_menu_shell_append(GTK_MENU_SHELL(HelpMenu), Item_About);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Refresh);
-	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Preferences);
+	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Settings);
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Quit);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(MenuBar), FileTag);
