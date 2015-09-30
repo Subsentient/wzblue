@@ -348,8 +348,12 @@ static void GUI_DrawSettingsDialog(void)
 	//Main window label and the separator.
 	GtkWidget *Label = gtk_label_new("Game launch options");
 	
-	gtk_table_attach((GtkTable*)Table, Label, 0, 5, 0, 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, 1, 2, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	unsigned Row = 0;
+	
+	gtk_table_attach((GtkTable*)Table, Label, 0, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	++Row;
+	gtk_table_attach((GtkTable*)Table, gtk_hseparator_new(), 0, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	++Row;
 	
 	///Options
 	//Choose Warzone binary
@@ -373,15 +377,80 @@ static void GUI_DrawSettingsDialog(void)
 	GtkWidget *BinaryChooserLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
 	gtk_container_add((GtkContainer*)BinaryChooserLabelAlign, BinaryChooserLabel);
 	
-	gtk_table_attach((GtkTable*)Table, BinaryChooserLabelAlign, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, BinaryChooserSep, 1, 2, 2, 3, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_table_attach((GtkTable*)Table, BinaryChooser, 2, 5, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
-
+	gtk_table_attach((GtkTable*)Table, BinaryChooserLabelAlign, 0, 1, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, BinaryChooserSep, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, BinaryChooser, 2, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 	
+	++Row;
+	
+	//Resolution
+	static GtkWidget *ResBox[2];
+	ResBox[0] = gtk_entry_new();
+	ResBox[1] = gtk_entry_new();
+	
+	
+	if (Settings.Resolution.Width && Settings.Resolution.Height)
+	{
+		char W[64], H[64];
+		snprintf(W, sizeof W, "%u", Settings.Resolution.Width);
+		snprintf(H, sizeof H, "%u", Settings.Resolution.Height);
+		gtk_entry_set_text((GtkEntry*)ResBox[0], W);
+		gtk_entry_set_text((GtkEntry*)ResBox[1], H);
+	}
+	
+	GtkWidget *ResXLabel = gtk_label_new("x");
+	gtk_widget_set_size_request(ResBox[0], 45, -1);
+	gtk_widget_set_size_request(ResBox[1], 45, -1);
+	
+	GtkWidget *ResHBox = gtk_hbox_new(FALSE, 4);
+	GtkWidget *ResHBoxAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	GtkWidget *ResButton = gtk_button_new_with_label("Save");
+	
+	g_signal_connect((GObject*)ResButton, "clicked", (GCallback)Settings_SetResolution, ResBox);
+	
+	gtk_container_add((GtkContainer*)ResHBoxAlign, ResHBox);
+	
+	gtk_box_pack_start((GtkBox*)ResHBox, ResBox[0], FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)ResHBox, ResXLabel, FALSE, FALSE, 3);
+	gtk_box_pack_start((GtkBox*)ResHBox, ResBox[1], FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)ResHBox, ResButton, FALSE, FALSE, 0);
+	
+	GtkWidget *ResLabel = gtk_label_new("Resolution");
+	GtkWidget *ResLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	gtk_container_add((GtkContainer*)ResLabelAlign, ResLabel);
+	
+	gtk_table_attach((GtkTable*)Table, ResLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, ResHBoxAlign, 2, 3, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
+	++Row;
 	//Radio buttons
 	GtkWidget *RadioButtons[3] = { NULL };
 	const char *const RadioLabels[3] = { "Unspecified", "No", "Yes" };
-	unsigned Row = 3;
+	
+	//Fullscreen
+	GtkWidget *FullscreenLabel = gtk_label_new("Display mode");
+	GtkWidget *FullscreenLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
+	gtk_container_add((GtkContainer*)FullscreenLabelAlign, FullscreenLabel);
+	
+	const char *const ScreenRadioLabels[3] = { "Unspecified", "Windowed", "Fullscreen" };
+	GUI_CreateRadioButtonGroup(3, ScreenRadioLabels, RadioButtons);
+	
+	Settings_RadioButtonInit(RadioButtons, Settings.Fullscreen);
+	
+	gtk_table_attach((GtkTable*)Table, FullscreenLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	
+	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	
+	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetFullscreen, DefaultChoices);
+	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetFullscreen, DefaultChoices + 1);
+	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetFullscreen, DefaultChoices + 2);
+	
+	++Row;
 	
 	//Sound
 	GtkWidget *SoundLabel = gtk_label_new("Enable sound");

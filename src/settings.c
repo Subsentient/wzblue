@@ -91,12 +91,35 @@ void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice)
 	}
 }
 
+void Settings_SetFullscreen(GtkRadioButton *Button, enum SettingsChoice *Choice)
+{
+	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))
+	{
+		Settings.Fullscreen = *Choice;
+	}
+}
+
 void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice)
 {
 	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))
 	{
 		Settings.VBOS = *Choice;
 	}
+}
+
+void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes)
+{
+	const char *Width = gtk_entry_get_text((GtkEntry*)Boxes[0]);
+	const char *Height = gtk_entry_get_text((GtkEntry*)Boxes[1]);
+	
+	if (!strlen(Width) || !strlen(Height))
+	{
+		Settings.Resolution.Width = 0;
+		Settings.Resolution.Height = 0;
+		return;
+	}
+	Settings.Resolution.Width = atoi(Width);
+	Settings.Resolution.Height = atoi(Height);
 }
 
 static int Settings_GetIndiceFromChoice(enum SettingsChoice Setting)

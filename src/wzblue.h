@@ -138,7 +138,8 @@ void Settings_SetShadows(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetFullscreen(GtkRadioButton *Button, enum SettingsChoice *Choice);
+void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes);
 void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting);
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax);
-
 #endif //__WZBLUE_H__
