@@ -32,7 +32,7 @@ static void GUI_DrawLaunchFailure(void);
 static void GUI_DrawSettingsDialog(void);
 static void GUI_OpenColorWheel(void);
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
-
+static void GUI_GetBinaryCWD(const char *In, char *Out, unsigned OutMax);
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 {
@@ -239,6 +239,34 @@ void GUI_DrawMenus()
 	gtk_widget_show_all(GuiInfo.Table);
 }
 
+static void GUI_GetBinaryCWD(const char *In, char *Out, unsigned OutMax)
+{
+#ifdef WIN
+	const char *Delim = "\\";
+#else
+	const char *Delim = "/";
+#endif
+	char CWD[1024];
+	SubStrings.Copy(CWD, In, sizeof CWD);
+	
+	const char *Worker = CWD;
+	char *Final = NULL;
+	
+	while ( (Worker = SubStrings.CFind(*Delim, 1, Worker)) )
+	{
+		Final = (char*)Worker;
+		if (*Worker == *Delim) ++Worker;
+	}
+	
+	if (Final)
+	{
+		*Final = '\0';
+		SubStrings.Copy(Out, CWD, OutMax);
+	}
+	else if (OutMax > 0) *Out = '\0';
+}
+	
+	
 GtkWidget *GUI_InitGUI()
 {
 	GtkWidget *Win = GuiInfo.Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -774,6 +802,11 @@ static void GUI_LaunchGame(const char *IP)
 	//Copy in the host or join parameter,
 	SubStrings.Copy(Argv[1], IPFormat, 256);
 	
+	char CWD[1024];
+	GUI_GetBinaryCWD(*Argv, CWD, sizeof CWD);
+	
+	chdir(CWD);
+	
 	const char *Iter = ExtraOptions;
 	
 	char Temp[256];
@@ -807,15 +840,13 @@ static void GUI_LaunchGame(const char *IP)
 		SubStrings.Replace(WZString, TempBuf, sizeof WZString, "%20", " ");
 		SubStrings.Replace(WZString, TempBuf, sizeof WZString, "/", "\\");
 		free(TempBuf);
-		
-		FILE *Desc = fopen("arg0.txt", "w");
-		
-		if (Desc)
-		{
-			fputs(WZString, Desc);
-			fclose(Desc);
-		}
 	}
+	
+	char BinaryWD[1024];
+	GUI_GetBinaryCWD(WZString, BinaryWD, sizeof BinaryWD);
+	
+	char CWD[1024];
+	getcwd(CWD, sizeof CWD);
 	
     char IPFormat[128] = "--join=";
 	if (IP == NULL)
@@ -841,8 +872,10 @@ static void GUI_LaunchGame(const char *IP)
     
     StartupInfo.cb = sizeof StartupInfo;
 	//Launch it
-	const gboolean Worked = CreateProcess(NULL, WZString, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
 	
+	chdir(BinaryWD);
+	const gboolean Worked = CreateProcess(NULL, WZString, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
+	chdir(CWD);
 	CloseHandle(ProcessInfo.hProcess);
 	CloseHandle(ProcessInfo.hThread);
     
