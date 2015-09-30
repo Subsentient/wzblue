@@ -112,7 +112,7 @@ void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes)
 	const char *Width = gtk_entry_get_text((GtkEntry*)Boxes[0]);
 	const char *Height = gtk_entry_get_text((GtkEntry*)Boxes[1]);
 	
-	if (!strlen(Width) || !strlen(Height))
+	if ((!strlen(Width) || !atoi(Width)) || (!strlen(Height) || !atoi(Height)))
 	{
 		Settings.Resolution.Width = 0;
 		Settings.Resolution.Height = 0;
