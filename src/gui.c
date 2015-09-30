@@ -215,7 +215,7 @@ void GUI_DrawMenus()
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
 	g_signal_connect(G_OBJECT(Item_Settings), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
-	g_signal_connect(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, NULL);
+	g_signal_connect_swapped(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, GuiInfo.Win);
 	
 	g_signal_connect_swapped(G_OBJECT(Item_Refresh), "activate", (GCallback)Main_LoopFunc, &False);
 	
