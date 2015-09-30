@@ -30,7 +30,7 @@ static void GUI_LoadIcons(void);
 static void GUI_LaunchGame(const char *IP);
 static void GUI_DrawLaunchFailure(void);
 static void GUI_DrawSettingsDialog(void);
-
+static void GUI_OpenColorWheel(void);
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
 
 
@@ -39,6 +39,13 @@ static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff)
 	Settings_SaveSettings();
 	gtk_main_quit();
 	exit(0);
+}
+
+static void GUI_OpenColorWheel(void)
+{
+	GtkWidget *ColorDialog = gtk_color_selection_dialog_new("Color wheel");
+	g_signal_connect((GObject*)ColorDialog, "response", (GCallback)GTK_NukeWidget, ColorDialog);
+	gtk_widget_show_all(ColorDialog);
 }
 
 gboolean GUI_CheckSlider(void)
@@ -606,13 +613,24 @@ static void GUI_DrawSettingsDialog(void)
 	g_signal_connect_swapped((GObject*)NameButton, "clicked", (GCallback)Settings_Color_SetNameColor, NameColor);
 	gtk_box_pack_start((GtkBox*)NameHBox, NameColor, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)NameHBox, NameButton, FALSE, FALSE, 0);
+	
+	// *** COLOR PICKER PACKED NEXT TO NAME ***
+	GtkWidget *ColorPickerAlign = gtk_alignment_new(1.0, 0.5, 0.01, 0.01);
+
+	GtkWidget *ColorPickerButton = gtk_button_new();
+	GtkWidget *ColorPickerImage = gtk_image_new_from_stock(GTK_STOCK_SELECT_COLOR, GTK_ICON_SIZE_BUTTON);
+	g_signal_connect((GObject*)ColorPickerButton, "clicked", (GCallback)GUI_OpenColorWheel, NULL);
+	
+	g_object_set((GObject*)ColorPickerButton, "image", ColorPickerImage, NULL);
+	gtk_container_add((GtkContainer*)ColorPickerAlign, ColorPickerButton);
 
 	
 	gtk_container_add((GtkContainer*)NameLabelAlign, NameLabel);
 	
 	gtk_table_attach((GtkTable*)Table, NameLabelAlign, 0, 1, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, NameSep, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_table_attach((GtkTable*)Table, NameColorAlign, 2, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, NameColorAlign, 2, 4, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, ColorPickerAlign, 4, 5, Row, Row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 
 	++Row;
 	//Map color

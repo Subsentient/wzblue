@@ -136,6 +136,7 @@ void GUI_SetStatusBar(const char *Text);
 void GUI_SetStatusBar_GameCount(const uint32_t GamesAvailable);
 void GUI_Flush(void);
 gboolean GUI_CheckSlider(void);
+void GTK_NukeWidget(GtkWidget *Widgy);
 
 /*settings.c*/
 gboolean Settings_ReadSettings(void);
