@@ -405,11 +405,13 @@ static void GUI_DrawSettingsDialog(void)
 	gtk_widget_set_size_request(ResBox[0], 45, -1);
 	gtk_widget_set_size_request(ResBox[1], 45, -1);
 	
-	GtkWidget *ResHBox = gtk_hbox_new(FALSE, 4);
+	GtkWidget *ResHBox = gtk_hbox_new(FALSE, 5);
 	GtkWidget *ResHBoxAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
 	GtkWidget *ResButton = gtk_button_new_with_label("Save");
+	GtkWidget *ResButton2 = gtk_button_new_with_label("Clear");
 	
 	g_signal_connect((GObject*)ResButton, "clicked", (GCallback)Settings_SetResolution, ResBox);
+	g_signal_connect((GObject*)ResButton2, "clicked", (GCallback)Settings_ClearResolution, ResBox);
 	
 	gtk_container_add((GtkContainer*)ResHBoxAlign, ResHBox);
 	
@@ -417,6 +419,7 @@ static void GUI_DrawSettingsDialog(void)
 	gtk_box_pack_start((GtkBox*)ResHBox, ResXLabel, FALSE, FALSE, 3);
 	gtk_box_pack_start((GtkBox*)ResHBox, ResBox[1], FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)ResHBox, ResButton, FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)ResHBox, ResButton2, FALSE, FALSE, 0);
 	
 	GtkWidget *ResLabel = gtk_label_new("Resolution");
 	GtkWidget *ResLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
