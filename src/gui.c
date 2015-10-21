@@ -205,15 +205,20 @@ void GUI_DrawMenus()
 	//Items for the file menu
 	GtkWidget *Item_Quit = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, AccelGroup);
 	GtkWidget *Item_Refresh = gtk_image_menu_item_new_from_stock(GTK_STOCK_REFRESH, AccelGroup);
+	GtkWidget *Item_Launch = gtk_image_menu_item_new_with_mnemonic("_Launch Warzone");
+	GtkWidget *Item_Launch_Image = gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_MENU);
 	GtkWidget *Item_Settings = gtk_image_menu_item_new_with_mnemonic("_Settings");
 	GtkWidget *Item_Settings_Image = gtk_image_new_from_stock(GTK_STOCK_PREFERENCES, GTK_ICON_SIZE_MENU);
 	
 	g_object_set((GObject*)Item_Settings, "image", Item_Settings_Image, NULL);
+	g_object_set((GObject*)Item_Launch, "image", Item_Launch_Image, NULL);
+	
 	
 	//Set up accelerator for Refresh (F5)
 	gtk_widget_add_accelerator(Item_Refresh, "activate", AccelGroup, 0xffc2 ,0, GTK_ACCEL_VISIBLE);
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
+	g_signal_connect_swapped(G_OBJECT(Item_Launch), "activate", (GCallback)GUI_LaunchGame, (void*)-1);
 	g_signal_connect(G_OBJECT(Item_Settings), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
 	g_signal_connect_swapped(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, GuiInfo.Win);
 	
@@ -222,6 +227,7 @@ void GUI_DrawMenus()
 	gtk_menu_shell_append(GTK_MENU_SHELL(HelpMenu), Item_About);
 	
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Refresh);
+	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Launch);
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Settings);
 	gtk_menu_shell_append(GTK_MENU_SHELL(FileMenu), Item_Quit);
 	
@@ -785,12 +791,19 @@ static void GUI_LaunchGame(const char *IP)
 	
 	//THe binary and the host/join option need to be allocated by us.
 	Argv[0] = calloc(256, 1);
-	Argv[1] = calloc(256, 1);
+	if (IP != (void*)-1)
+	{
+		Argv[1] = calloc(256, 1);
+	}
 	
 	char IPFormat[128] = "--join=";
 	if (IP == NULL)
 	{
 		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
+	}
+	else if (IP == (void*)-1)
+	{
+		*IPFormat = '\0';
 	}
 	else
 	{
@@ -799,8 +812,11 @@ static void GUI_LaunchGame(const char *IP)
 	
 	//Copy in the binary path.
 	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, 256);
-	//Copy in the host or join parameter,
-	SubStrings.Copy(Argv[1], IPFormat, 256);
+	
+	if (IP != (void*)-1)//Copy in the host or join parameter,
+	{
+		SubStrings.Copy(Argv[1], IPFormat, 256);
+	}
 	
 	char CWD[1024];
 	GUI_GetBinaryCWD(*Argv, CWD, sizeof CWD);
@@ -811,7 +827,7 @@ static void GUI_LaunchGame(const char *IP)
 	
 	char Temp[256];
 	//Break it up into argv format.
-	for (Inc = 2; Inc < 20 && SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
+	for (Inc = IP == (void*)-1 ? 1 : 2; Inc < (IP == (void*)-1 ? 21 : 20) && SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
 	{
 		Argv[Inc] = strdup(Temp);
 	}
