@@ -800,8 +800,15 @@ bool GUI_GetGameVersion(char *OutBuf, const size_t Capacity)
 
 	char CmdBuf[4096] = { 0 };
 
-	snprintf(CmdBuf, sizeof CmdBuf, "%s --version > .wzv", WZBinary);
+	char *TempBuf = calloc(sizeof WZBinary * 2, 1);
+	
+	SubStrings.Replace(WZBinary, TempBuf, sizeof WZBinary, "%20", " ");
+	SubStrings.Replace(WZBinary, TempBuf, sizeof WZBinary, "/", "\\");
 
+	free(TempBuf);
+	
+	snprintf(CmdBuf, sizeof CmdBuf, "\"%s\" --version > .wzv", WZBinary);
+	
 	system(CmdBuf);
 
 	struct stat FileStat;
@@ -1130,6 +1137,17 @@ static void GTK_NukeContainerChildren(GtkContainer *Container)
 	g_list_free(Children);
 }	
 
+void GUI_ConnErr(GtkWidget *ScrolledWindow)
+{
+	GtkWidget *VBox = gtk_vbox_new(FALSE, 1); //Because it wants a container.
+	
+	GtkWidget *Label = gtk_label_new("Connection error. Will retry at next interval.");
+	gtk_box_pack_start(GTK_BOX(VBox), Label, FALSE, FALSE, 20);
+	
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(ScrolledWindow), VBox);
+	gtk_widget_show_all(ScrolledWindow);
+}
+
 void GUI_NoGames(GtkWidget *ScrolledWindow)
 {
 	GtkWidget *VBox = gtk_vbox_new(FALSE, 1); //Because it wants a container.
@@ -1204,6 +1222,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		GtkWidget *Icon = gtk_image_new_from_pixbuf(IconBuf);
 		
 		GtkWidget *Label = gtk_label_new("");
+		gtk_label_set_selectable((GtkLabel*)Label, true);
 		gtk_label_set_markup((GtkLabel*)Label, OutBuf);
 		
 		GtkWidget *Button = gtk_button_new_with_label("Join");

@@ -40,8 +40,10 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	
 	SubStrings.Split(Server, PortText, ":", Settings.LobbyURL, SPLIT_NOKEEP);
 	const unsigned short Port = atoi(PortText);
+
+	gboolean ConnErr = FALSE;
 	
-	gboolean Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
+	gboolean Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList, &ConnErr);
 	
 	if (GamesAvailable)
 	{
@@ -54,7 +56,11 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	
 	GUI_ClearGames(GuiInfo.ScrolledWindow);
 	
-	if (GamesAvailable)
+	if (ConnErr)
+	{
+		GUI_ConnErr(GuiInfo.ScrolledWindow);
+	}
+	else if (GamesAvailable)
 	{
 		GUI_RenderGames(GuiInfo.ScrolledWindow, GamesList, GamesAvailable);
 	}

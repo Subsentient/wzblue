@@ -105,7 +105,7 @@ static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 	return TRUE;
 }
 
-gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer)
+gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer, gboolean *ConnErr)
 {
 	GameStruct *GamesList = NULL;
 	static GameStruct *PrevList;
@@ -117,12 +117,14 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
 		puts("Unable to connect to lobby server!");
+		*ConnErr = TRUE;
 		return FALSE;
 	}
 	
 	if (!Net_Write(WZSocket, "list\r\n"))
 	{
 		puts("Unable to write LIST command to lobby server!");
+		*ConnErr = TRUE;
 		return FALSE;
 	}
 	
@@ -130,6 +132,7 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	if (!Net_Read(WZSocket, GamesAvailable, sizeof(uint32_t), FALSE))
 	{
 		puts("Unable to read data from connection to lobby server!");
+		*ConnErr = TRUE;
 		return FALSE;
 	}
 	
@@ -148,6 +151,7 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 			if (PrevList) free(PrevList);
 			PrevList = NULL;
 			free(GamesList);
+			*ConnErr = TRUE;
 			return FALSE;
 		}
 
@@ -189,6 +193,7 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	if (PrevList) free(PrevList);
 	PrevList = GamesList;
 
+	*ConnErr = FALSE;
 	return RetVal;
 	
 }
