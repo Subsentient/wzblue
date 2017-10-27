@@ -2,9 +2,10 @@
 *.gch
 src/*.o
 src/*.gch
+wzblueconfig*.bin
 src/substrings/libsubstrings*
 win32/*.o
 win32/*.gch
 wzblue
-wzblue.exe
+**/*.exe
 wzblueicon.png

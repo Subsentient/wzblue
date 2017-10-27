@@ -8,13 +8,15 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.1.1"
+#define WZBLUE_VERSION "1.2.0"
 
 #include <gtk/gtk.h>
 
 #define NUMELEMENTS(x) (sizeof x / sizeof *x)
 
 #include <stdint.h>
+#include <stdbool.h>
+
 typedef struct
 {
 	uint32_t StructVer;
@@ -76,7 +78,8 @@ struct Settings
 /*DON'T PUT POINTERS IN HERE!
 * it gets written to a file as configuration!
 */
-	char WZBinary[1024]; //Full path to the executable for Warzone 2100
+	char WZBinary[2048]; //Full path to the executable for Warzone 2100
+	char LobbyURL[1024]; //Domain name or IP for lobby server.
 	struct
 	{
 		unsigned Width;
@@ -88,9 +91,9 @@ struct Settings
 	enum SettingsChoice Shaders;
 	enum SettingsChoice VBOS;
 	enum SettingsChoice TextureCompression;
+	enum SettingsChoice HideIncompatibleGames;
 	
 	//For future options
-	enum SettingsChoice Reserved1;
 	enum SettingsChoice Reserved2;
 	enum SettingsChoice Reserved3;
 	enum SettingsChoice Reserved4;
@@ -112,6 +115,7 @@ extern struct GooeyGuts GuiInfo;
 extern gboolean True, False;
 extern struct Settings Settings;
 extern enum SettingsChoice DefaultChoices[];
+extern char GameVersion[1024];
 
 /*main.c*/
 gboolean Main_LoopFunc(gboolean *ViaLoop);
@@ -137,6 +141,7 @@ void GUI_SetStatusBar_GameCount(const uint32_t GamesAvailable);
 void GUI_Flush(void);
 gboolean GUI_CheckSlider(void);
 void GTK_NukeWidget(GtkWidget *Widgy);
+bool GUI_GetGameVersion(char *OutBuf, const size_t Capacity);
 
 /*settings.c*/
 gboolean Settings_ReadSettings(void);
@@ -155,4 +160,7 @@ void Settings_Color_SetMapColor(GtkWidget *Entry);
 void Settings_Color_SetHostColor(GtkWidget *Entry);
 void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsChoice Setting);
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax);
+void Settings_LobbyURL_Save(GtkWidget *Entry);
+void Settings_SetHideIncompatible(GtkCheckButton *Button);
+
 #endif //__WZBLUE_H__

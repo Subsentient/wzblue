@@ -11,14 +11,13 @@ See the included file UNLICENSE.TXT for more information.
 #include <unistd.h>
 #include <gtk/gtk.h>
 #include "wzblue.h"
-#ifdef WIN
+#include "substrings/substrings.h"
+#ifdef WIN32
 #include <windows.h>
 #include <commctrl.h>
 #endif
 
 unsigned RefreshRate = 10; /*10 sec refresh by default*/
-static char Server[128] = "lobby.wz2100.net"; //The lobby server hostname.
-static int Port = 9990;
 static unsigned Counter = 0;
 gboolean True = TRUE, False = FALSE;
 //Prototypes
@@ -35,6 +34,13 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	
 	GUI_SetStatusBar("Refreshing...");
 	GUI_Flush();
+
+	char Server[1024] = { 0 };
+	char PortText[16] = { 0 };
+	
+	SubStrings.Split(Server, PortText, ":", Settings.LobbyURL, SPLIT_NOKEEP);
+	const unsigned short Port = atoi(PortText);
+	
 	gboolean Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList);
 	
 	if (GamesAvailable)
@@ -66,7 +72,7 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 int main(int argc, char **argv)
 {
 	int Inc = 1;
-#ifdef WIN /*Fire up winsock2.*/
+#ifdef WIN32 /*Fire up winsock2.*/
 	WSADATA WSAData;
 
     if (WSAStartup(MAKEWORD(1,1), &WSAData) != 0)
@@ -86,24 +92,10 @@ int main(int argc, char **argv)
 	{
 		for (; Inc < argc; ++Inc)
 		{
-			if (!strncmp(argv[Inc], "--server=", sizeof "--server=" - 1))
-			{
-				strncpy(Server, argv[Inc] + (sizeof "--server=" - 1), sizeof Server - 1);
-				Server[sizeof Server - 1] = '\0';
-			}
-			else if (!strncmp(argv[Inc], "--port=", sizeof "--port=" - 1))
-			{
-				Port = atoi(argv[Inc] + (sizeof "--port=" - 1));
-				if (!Port)
-				{
-					fprintf(stderr, "You specified port 0 (zero). That's not valid. Default is 9990.\n");
-					exit(1);
-				}
-			}
-			else if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
+			if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{
 				puts("WZBlue version " WZBLUE_VERSION);
-				puts("Arguments are --server=myserver.com, --port=9990");
+				puts("Options are available in the configuration dialog.");
 				exit(0);
 			}
 			else
@@ -116,6 +108,9 @@ int main(int argc, char **argv)
 	
 	//Read in settings, if present.
 	Settings_ReadSettings();
+
+	//Get version of Warzone binary.
+	GUI_GetGameVersion(GameVersion, sizeof GameVersion);
 	
 	//Start the GUI
 	gtk_init(&argc, &argv);

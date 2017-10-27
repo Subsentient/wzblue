@@ -9,7 +9,7 @@ See the included file UNLICENSE.TXT for more information.
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef WIN
+#ifdef WIN32
 #include <winsock2.h>
 #else
 #include <sys/socket.h>
@@ -111,7 +111,7 @@ gboolean Net_Disconnect(int SockDescriptor)
 {
 	if (!SockDescriptor) return FALSE;
 	
-#ifdef WIN
+#ifdef WIN32
 	return !closesocket(SockDescriptor);
 #else
 	return !close(SockDescriptor);

@@ -14,7 +14,7 @@ See the included file UNLICENSE.TXT for more information.
 #include "substrings/substrings.h"
 #include "icons.h"
 
-#ifdef WIN
+#ifdef WIN32
 #include <windows.h>
 #include <dirent.h>
 #include <tchar.h>
@@ -23,6 +23,8 @@ See the included file UNLICENSE.TXT for more information.
 #endif //WIN
 
 struct GooeyGuts GuiInfo;
+
+char GameVersion[1024];
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
@@ -247,7 +249,7 @@ void GUI_DrawMenus()
 
 static void GUI_GetBinaryCWD(const char *In, char *Out, unsigned OutMax)
 {
-#ifdef WIN
+#ifdef WIN32
 	const char *Delim = "\\";
 #else
 	const char *Delim = "/";
@@ -337,11 +339,20 @@ GtkWidget *GUI_InitGUI()
 	gtk_box_pack_start((GtkBox*)BabyVBox, RefreshSlider, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)BabyVBox, BabySep, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)BabyVBox, BabyLabel, FALSE, FALSE, 0);
-	
 
 	gtk_box_pack_start((GtkBox*)HBox, Button1, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)HBox, Button2, FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)HBox, BabyVBox, TRUE, TRUE, 0);
+
+	GtkWidget *CheckButton = gtk_check_button_new();
+
+	g_signal_connect((GObject*)CheckButton, "toggled", (GCallback)Settings_SetHideIncompatible, NULL);
+
+	gtk_toggle_button_set_active((GtkToggleButton*)CheckButton, Settings.HideIncompatibleGames == CHOICE_YES);
+	
+	gtk_box_pack_start((GtkBox*)HBox, gtk_vseparator_new(), FALSE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, gtk_label_new("Hide incompatible games"), FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, CheckButton, FALSE, FALSE, 0);
 	
 	gtk_container_add((GtkContainer*)Align, HBox);
 	
@@ -400,11 +411,30 @@ static void GUI_DrawSettingsDialog(void)
 	++Row;
 	
 	///Options
+
+	//Choose lobby server
+	GtkWidget *LobbyURLLabel = gtk_label_new("Lobby server");
+	GtkWidget *LobbyURLLabelAlign = gtk_alignment_new(0.0, 0.5, 0.01, 0.01);
+	GtkWidget *LobbyURLSeparator = gtk_vseparator_new();
+	GtkWidget *LobbyURLEntry = gtk_entry_new();
+	GtkWidget *LobbyURLSaveButton = gtk_button_new_with_label("Save");
+	
+	gtk_entry_set_text((GtkEntry*)LobbyURLEntry, Settings.LobbyURL);
+
+	g_signal_connect_swapped((GObject*)LobbyURLSaveButton, "clicked", (GCallback)Settings_LobbyURL_Save, LobbyURLEntry);
+	
+	gtk_container_add((GtkContainer*)LobbyURLLabelAlign, LobbyURLLabel);
+	gtk_table_attach((GtkTable*)Table, LobbyURLLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, LobbyURLSeparator, 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_table_attach((GtkTable*)Table, LobbyURLEntry, 2, 4, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
+	gtk_table_attach((GtkTable*)Table, LobbyURLSaveButton, 4, 5, Row, Row + 1, GTK_EXPAND | GTK_SHRINK, GTK_SHRINK, 0, 0);
+	++Row;
+	
 	//Choose Warzone binary
 	GtkWidget *BinaryChooserLabel = gtk_label_new("Warzone 2100 binary");
 	GtkWidget *BinaryChooser = gtk_file_chooser_button_new("Select Warzone 2100 binary", GTK_FILE_CHOOSER_ACTION_OPEN);
 	
-#ifdef WIN
+#ifdef WIN32
 	char WZBinary[1024] = "file:///";
 	const gboolean AutoDetectedBinary = GUI_FindWZExecutable(WZBinary + sizeof "file:///" - 1, sizeof WZBinary - (sizeof "file:///" - 1));
 #else
@@ -414,7 +444,7 @@ static void GUI_DrawSettingsDialog(void)
 
 	char *TmpBuf = malloc(sizeof WZBinary * 2);
 	SubStrings.Replace(WZBinary, TmpBuf, sizeof WZBinary, " ", "%20");
-#ifdef WIN
+#ifdef WIN32
 	SubStrings.Replace(WZBinary, TmpBuf, sizeof WZBinary, "\\", "/");
 #endif
 	free(TmpBuf);
@@ -751,9 +781,73 @@ void GUI_ClearGames(GtkWidget *ScrolledWindow)
 	GTK_NukeContainerChildren((GtkContainer*)ScrolledWindow);
 }
 
+bool GUI_GetGameVersion(char *OutBuf, const size_t Capacity)
+{
+	char WZBinary[2048] = { 0 };
+
+	if (*Settings.WZBinary)
+	{
+#ifdef WIN32
+		SubStrings.Copy(WZBinary, Settings.WZBinary + (sizeof "file:///" - 1), sizeof WZBinary);
+#else
+		SubStrings.Copy(WZBinary, Settings.WZBinary + (sizeof "file://" - 1), sizeof WZBinary);
+#endif
+	}
+	else if (!GUI_FindWZExecutable(WZBinary, sizeof WZBinary))
+	{
+		return false;
+	}
+
+	char CmdBuf[4096] = { 0 };
+
+	snprintf(CmdBuf, sizeof CmdBuf, "%s --version > .wzv", WZBinary);
+
+	system(CmdBuf);
+
+	struct stat FileStat;
+
+	memset(&FileStat, 0, sizeof FileStat);
+
+	if (stat(".wzv", &FileStat) != 0) return false;
+
+	
+	FILE *Desc = fopen(".wzv", "rb");
+	if (!Desc) return false;
+
+	char *DirtyVersion = calloc(FileStat.st_size + 1, 1);
+
+	fread(DirtyVersion, 1, FileStat.st_size, Desc);
+	fclose(Desc);
+
+	remove(".wzv");
+
+	if (!*DirtyVersion)
+	{
+		free(DirtyVersion);
+		return false;
+	}
+
+	const char *Ptr = strstr(DirtyVersion, "Version: ");
+
+	if (!Ptr)
+	{
+		free(DirtyVersion);
+		return false;
+	}
+
+	Ptr += sizeof "Version: " - 1;
+
+	SubStrings.CopyUntilC(OutBuf, Capacity, &Ptr, "- ,", true);
+
+	free(DirtyVersion);
+
+	return true;
+}
+	
+
 static void GUI_LaunchGame(const char *IP)
 { //Null specifies we want to host.
-#ifndef WIN
+#ifndef WIN32
 
 	char ExtraOptions[4096] = { '\0' };
 	char WZBinary[1024];
@@ -930,7 +1024,7 @@ static void GUI_DrawLaunchFailure(void)
 
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize)
 {
-#ifndef WIN
+#ifndef WIN32
 	const char *Path = getenv("PATH");
 	
 	if (!Path) exit(1);

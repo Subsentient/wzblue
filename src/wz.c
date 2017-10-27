@@ -12,13 +12,14 @@ See the included file UNLICENSE.TXT for more information.
 #include <string.h>
 #include <stdint.h>
 #include <gtk/gtk.h>
-#ifdef WIN
+#ifdef WIN32
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #endif
 
 #include "wzblue.h"
+#include "substrings/substrings.h"
 
 static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct);
 
@@ -136,17 +137,27 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	
 	/*Allocate space for them.*/
 	*Pointer = GamesList = calloc(*GamesAvailable + 1, sizeof(GameStruct));
-	
-	for (; Inc < *GamesAvailable; ++Inc)
+
+	unsigned Usable = 0;
+	for (unsigned Inc = 0; Inc < *GamesAvailable; ++Inc)
 	{ /*Receive the listings.*/
-		if (!WZ_RecvGameStruct(WZSocket, GamesList + Inc))
+		GameStruct Temp = { 0 };
+		
+		if (!WZ_RecvGameStruct(WZSocket, &Temp))
 		{
 			if (PrevList) free(PrevList);
 			PrevList = NULL;
 			free(GamesList);
 			return FALSE;
 		}
+
+		if (Settings.HideIncompatibleGames != CHOICE_YES || SubStrings.Compare(GameVersion, Temp.VersionString) || !*GameVersion)
+		{
+			GamesList[Usable++] = Temp;
+		}
 	}
+
+	*GamesAvailable = Usable;
 	
 	Net_Disconnect(WZSocket);
 	

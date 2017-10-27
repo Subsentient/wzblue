@@ -1,8 +1,5 @@
 
 all:
-ifeq ($(OS),WIN)
-	$(MAKE) -C win32
-endif
 	$(MAKE) -C src
 clean:
 	$(MAKE) -C src clean

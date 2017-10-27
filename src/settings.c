@@ -12,10 +12,10 @@ See the included file UNLICENSE.TXT for more information.
 #include "wzblue.h"
 #include "substrings/substrings.h"
 
-#define CONFIGFILE "wzblueconfig.bin"
+#define CONFIGFILE "wzblueconfig-v2.bin"
 
 //Globals
-struct Settings Settings = { .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
+struct Settings Settings = { .LobbyURL = "lobby.wz2100.net:9990", .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
 enum SettingsChoice DefaultChoices[] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
 
 //Prototypes
@@ -57,6 +57,8 @@ void Settings_SetBinary(GtkFileChooserButton *Button)
 {
 	strncpy(Settings.WZBinary, gtk_file_chooser_get_uri((GtkFileChooser*)Button), sizeof Settings.WZBinary - 1);
 	Settings.WZBinary[sizeof Settings.WZBinary - 1] = '\0';
+
+	GUI_GetGameVersion(GameVersion, sizeof GameVersion);
 }
 
 void Settings_SetSound(GtkRadioButton *Button, enum SettingsChoice *Choice)
@@ -73,6 +75,12 @@ void Settings_SetShadows(GtkRadioButton *Button, enum SettingsChoice *Choice)
 	{
 		Settings.Shadows = *Choice;
 	}
+}
+
+void Settings_SetHideIncompatible(GtkCheckButton *Button)
+{
+	Settings.HideIncompatibleGames = gtk_toggle_button_get_active((GtkToggleButton*)Button) ? CHOICE_YES : CHOICE_NO;
+	Main_LoopFunc(&False);
 }
 
 void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Choice)
@@ -252,3 +260,9 @@ void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
 	}
 	
 }
+
+void Settings_LobbyURL_Save(GtkWidget *Entry)
+{
+	SubStrings.Copy(Settings.LobbyURL, gtk_entry_get_text((GtkEntry*)Entry), sizeof Settings.LobbyURL);
+}
+
