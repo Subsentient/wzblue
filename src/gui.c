@@ -803,7 +803,9 @@ bool GUI_GetGameVersion(char *OutBuf, const size_t Capacity)
 	char *TempBuf = calloc(sizeof WZBinary * 2, 1);
 	
 	SubStrings.Replace(WZBinary, TempBuf, sizeof WZBinary, "%20", " ");
+#ifdef WIN32
 	SubStrings.Replace(WZBinary, TempBuf, sizeof WZBinary, "/", "\\");
+#endif
 
 	free(TempBuf);
 	
