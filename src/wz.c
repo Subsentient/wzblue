@@ -33,6 +33,7 @@ static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 							sizeof RV.NetSpecs.HostIP + 
 							sizeof RV.SecondaryHosts + 
 							sizeof RV.Extra + 
+							sizeof RV.HostPort + 
 							sizeof RV.Map + 
 							sizeof RV.HostNick + 
 							sizeof RV.VersionString + 
@@ -79,6 +80,11 @@ static gboolean WZ_RecvGameStruct(int SockDescriptor, void *OutStruct)
 	/*Extra Map Host*/
 	memcpy(RV.Extra, Worker, sizeof RV.Extra);
 	Worker += sizeof RV.Extra;
+	
+	memcpy(&RV.HostPort, Worker, sizeof RV.HostPort);
+	Worker += sizeof RV.HostPort;
+	
+	RV.HostPort = ntohs(RV.HostPort);
 	
 	memcpy(RV.Map, Worker, sizeof RV.Map);
 	Worker += sizeof RV.Map;

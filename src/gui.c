@@ -24,12 +24,15 @@ See the included file UNLICENSE.TXT for more information.
 
 struct GooeyGuts GuiInfo;
 
+static GameStruct HostGS = { .Internal_IsHost = true };
+static GameStruct EmptyGS = { .Internal_IsEmpty = true };
+
 char GameVersion[1024];
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
 static void GTK_NukeContainerChildren(GtkContainer *Container);
 static void GUI_LoadIcons(void);
-static void GUI_LaunchGame(const char *IP);
+static void GUI_LaunchGame(const GameStruct *GS);
 static void GUI_DrawLaunchFailure(void);
 static void GUI_DrawSettingsDialog(void);
 static void GUI_OpenColorWheel(void);
@@ -220,7 +223,7 @@ void GUI_DrawMenus()
 	gtk_widget_add_accelerator(Item_Refresh, "activate", AccelGroup, 0xffc2 ,0, GTK_ACCEL_VISIBLE);
 	
 	g_signal_connect(G_OBJECT(Item_About), "activate", (GCallback)GUI_DrawAboutDialog, NULL);
-	g_signal_connect_swapped(G_OBJECT(Item_Launch), "activate", (GCallback)GUI_LaunchGame, (void*)-1);
+	g_signal_connect_swapped(G_OBJECT(Item_Launch), "activate", (GCallback)GUI_LaunchGame, &EmptyGS);
 	g_signal_connect(G_OBJECT(Item_Settings), "activate", (GCallback)GUI_DrawSettingsDialog, NULL);
 	g_signal_connect_swapped(G_OBJECT(Item_Quit), "activate", (GCallback)GTK_Destroy, GuiInfo.Win);
 	
@@ -357,7 +360,7 @@ GtkWidget *GUI_InitGUI()
 	gtk_container_add((GtkContainer*)Align, HBox);
 	
 	g_signal_connect_swapped(G_OBJECT(Button1), "clicked", (GCallback)Main_LoopFunc, &False);
-	g_signal_connect_swapped(G_OBJECT(Button2), "clicked", (GCallback)GUI_LaunchGame, NULL);
+	g_signal_connect_swapped(G_OBJECT(Button2), "clicked", (GCallback)GUI_LaunchGame, &HostGS);
 	
 	gtk_table_attach((GtkTable*)Table, Align, 0, 3, 4, 5, GTK_FILL, GTK_SHRINK, 0, 0);
 	gtk_table_attach((GtkTable*)Table, StatusBar, 0, 6, 5, 6, GTK_FILL, GTK_SHRINK, 0, 0);
@@ -854,7 +857,7 @@ bool GUI_GetGameVersion(char *OutBuf, const size_t Capacity)
 }
 	
 
-static void GUI_LaunchGame(const char *IP)
+static void GUI_LaunchGame(const GameStruct *GS)
 { //Null specifies we want to host.
 #ifndef WIN32
 
@@ -887,38 +890,52 @@ static void GUI_LaunchGame(const char *IP)
 	
 	
 	///Child code
-	//1 extra to null terminate the array, 1 for the binary, and 1 for join or host parameter.
-	char **Argv = calloc(23, sizeof(char*));
+	//Bigger than we'll ever need.
+	char **Argv = calloc(64, sizeof(char*));
 	
 	unsigned Inc = 0;
 	
 	//THe binary and the host/join option need to be allocated by us.
 	Argv[0] = calloc(256, 1);
-	if (IP != (void*)-1)
+	
+	if (!GS->Internal_IsEmpty)
 	{
 		Argv[1] = calloc(256, 1);
+		Argv[2] = calloc(256, 1);
 	}
 	
 	char IPFormat[128] = "--join=";
-	if (IP == NULL)
+	char PortFormat[128] = "--gameport=";
+	
+	if (GS->Internal_IsHost)
 	{
 		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
+		*PortFormat = '\0';
 	}
-	else if (IP == (void*)-1)
+	else if (GS->Internal_IsSpec)
+	{
+		snprintf(IPFormat, sizeof(IPFormat), "--spectate=%s", GS->NetSpecs.HostIP);		
+		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+	}
+	else if (GS->Internal_IsEmpty)
 	{
 		*IPFormat = '\0';
+		*PortFormat = '\0';
 	}
 	else
 	{
-		SubStrings.Cat(IPFormat, IP, sizeof IPFormat);
+		SubStrings.Cat(IPFormat, GS->NetSpecs.HostIP, sizeof IPFormat);
+		
+		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
 	}
 	
 	//Copy in the binary path.
 	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, 256);
 	
-	if (IP != (void*)-1)//Copy in the host or join parameter,
+	if (!GS->Internal_IsEmpty)//Copy in the host or join parameter,
 	{
 		SubStrings.Copy(Argv[1], IPFormat, 256);
+		SubStrings.Copy(Argv[2], PortFormat, 256);
 	}
 	
 	char CWD[1024];
@@ -927,14 +944,15 @@ static void GUI_LaunchGame(const char *IP)
 	chdir(CWD);
 	
 	const char *Iter = ExtraOptions;
-	
+
 	char Temp[256];
-	//Break it up into argv format.
-	for (Inc = IP == (void*)-1 ? 1 : 2; Inc < (IP == (void*)-1 ? 21 : 20) && SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
+	//Break ExtraOptions up into argv format.
+	Inc = GS->Internal_IsEmpty ? 1 : (GS->Internal_IsHost ? 2 : 3);
+	
+	for (; SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
 	{
 		Argv[Inc] = strdup(Temp);
 	}
-	
 	///We don't bother freeing anything because we're going to exec() it away anyways
 	
 	//Do the exec
@@ -943,7 +961,7 @@ static void GUI_LaunchGame(const char *IP)
 	exit(1);
 
 #else //WINDOWS CODE!!    
-    char WZString[2048];
+    char WZString[4096];
     
     if (!GUI_FindWZExecutable(WZString, sizeof WZString) && !*Settings.WZBinary)
     {
@@ -967,19 +985,44 @@ static void GUI_LaunchGame(const char *IP)
 	char CWD[1024];
 	getcwd(CWD, sizeof CWD);
 	
-    char IPFormat[128] = "--join=";
-	if (IP == NULL)
+	char IPFormat[128] = "--join=";
+	char PortFormat[128] = "--gameport=";
+	
+	if (GS->Internal_IsHost)
 	{
 		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
+		*PortFormat = '\0';
+	}
+	else if (GS->Internal_IsSpec)
+	{
+		snprintf(IPFormat, sizeof(IPFormat), "--spectate=%s", GS->NetSpecs.HostIP);		
+		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+	}
+	else if (GS->Internal_IsEmpty)
+	{
+		*IPFormat = '\0';
+		*PortFormat = '\0';
 	}
 	else
 	{
-		SubStrings.Cat(IPFormat, IP, sizeof IPFormat);
+		SubStrings.Cat(IPFormat, GS->NetSpecs.HostIP, sizeof IPFormat);
+		
+		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
 	}
 	
 	SubStrings.Cat(WZString, " ", sizeof WZString);
-	SubStrings.Cat(WZString, IPFormat, sizeof WZString);
-	SubStrings.Cat(WZString, " ", sizeof WZString);
+	
+	if (*IPFormat)
+	{
+		SubStrings.Cat(WZString, IPFormat, sizeof WZString);
+		SubStrings.Cat(WZString, " ", sizeof WZString);
+	}
+	
+	if (*PortFormat)
+	{
+		SubStrings.Cat(WZString, PortFormat, sizeof WZString);
+		SubStrings.Cat(WZString, " ", sizeof WZString);
+	}
 
 	Settings_AppendOptionsToLaunch(WZString, sizeof WZString);
 	
@@ -993,8 +1036,11 @@ static void GUI_LaunchGame(const char *IP)
 	//Launch it
 	
 	chdir(BinaryWD);
+	
 	const gboolean Worked = CreateProcess(NULL, WZString, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
+	
 	chdir(CWD);
+	
 	CloseHandle(ProcessInfo.hProcess);
 	CloseHandle(ProcessInfo.hThread);
     
@@ -1161,9 +1207,19 @@ void GUI_NoGames(GtkWidget *ScrolledWindow)
 	gtk_widget_show_all(ScrolledWindow);
 }
 
+static void SpecLaunch(GameStruct *GS)
+{
+	GS->Internal_IsSpec = true;
+	GUI_LaunchGame(GS);
+}
+static void JoinLaunch(GameStruct *GS)
+{
+	GS->Internal_IsSpec = false;
+	GUI_LaunchGame(GS);
+}
 void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t GamesAvailable)
 {
-	static void *FreeAfterRender[64];
+	static GameStruct *FreeAfterRender[64];
 	
 	//We want it static so that it persists when this function returns, but we still need to wipe it each call.
 	for (int Inc = 0; Inc < 64 && FreeAfterRender[Inc] != NULL; ++Inc)
@@ -1215,11 +1271,11 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 				"Name: <b><span foreground=\"%s\">%s</span></b> | "
 				"Map: <b><span foreground=\"%s\">%s</span></b>%s | "
 				"Host: <b><span foreground=\"%s\">%s</span></b>\n"
-				"Players: <b>%d/%d</b> %s| IP: <b>%s</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
+				"Players: <b>%d/%d</b> %s| IP: <b>%s:%hu</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
 				GamesList[Inc].GameName, Settings.Colors.Map, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
 				Settings.Colors.Host, GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
 				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].NetSpecs.HostIP,
-				GamesList[Inc].VersionString, ModString);
+				GamesList[Inc].HostPort, GamesList[Inc].VersionString, ModString);
 				
 		GtkWidget *Icon = gtk_image_new_from_pixbuf(IconBuf);
 		
@@ -1228,7 +1284,10 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		gtk_label_set_markup((GtkLabel*)Label, OutBuf);
 		
 		GtkWidget *Button = gtk_button_new_with_label("Join");
+		GtkWidget *SpecButton = gtk_button_new_with_label("Watch");
 		
+		gtk_widget_set_tooltip_text(SpecButton, "Spectate this game");
+		gtk_widget_set_tooltip_text(Button, "Join this game");
 		
 		//Add a temporary pointer to our temporary pointer list
 		void *Ptr = NULL;
@@ -1236,14 +1295,17 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		{
 			if (FreeAfterRender[Inc] == NULL)
 			{
-				FreeAfterRender[Inc] = Ptr = strdup(GamesList[Inc].NetSpecs.HostIP);
+				Ptr = malloc(sizeof(GameStruct));
+				
+				memcpy(Ptr, &GamesList[Inc], sizeof(GameStruct));
+				
+				FreeAfterRender[Inc] = Ptr;
 				break;
 			}
 		}
 		
-		if (Ptr == NULL) Ptr = "";
-		
-		g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)GUI_LaunchGame, Ptr);
+		g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)JoinLaunch, Ptr);
+		g_signal_connect_swapped(G_OBJECT(SpecButton), "clicked", (GCallback)SpecLaunch, Ptr);
 		
 		if (GamesList[Inc].NetSpecs.CurPlayers == GamesList[Inc].NetSpecs.MaxPlayers)
 		{
@@ -1258,6 +1320,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		GtkWidget *VSep = gtk_vseparator_new(), *VSep2 = gtk_vseparator_new();
 		
 		gtk_box_pack_start(GTK_BOX(HBox2), Button, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(HBox2), SpecButton, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(HBox2), VSep2, FALSE, FALSE, 0);
 		
 		gtk_box_pack_start(GTK_BOX(HBox), Icon, FALSE, TRUE, 0);

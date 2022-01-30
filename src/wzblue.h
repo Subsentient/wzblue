@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.2.2"
+#define WZBLUE_VERSION "1.3.0"
 
 #include <gtk/gtk.h>
 
@@ -33,7 +33,8 @@ typedef struct
 	} NetSpecs;
 	
 	char SecondaryHosts[2][40];
-	char Extra[159];
+	char Extra[157];
+	uint16_t HostPort;
 	char Map[40];
 	char HostNick[40];
 	char VersionString[64];
@@ -47,7 +48,16 @@ typedef struct
 	
 	uint32_t Unused1;
 	uint32_t Unused2;
-	uint32_t Unused3;
+	union
+	{ //So we can pass settings around in the struct. Sneaky hack.
+		struct
+		{
+			bool Internal_IsSpec;
+			bool Internal_IsHost;
+			bool Internal_IsEmpty;
+		};
+		uint32_t Unused3;
+	};
 } GameStruct;
 
 struct GooeyGuts
