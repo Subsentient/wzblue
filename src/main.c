@@ -77,8 +77,11 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	
 int main(int argc, char **argv)
 {
-	int Inc = 1;
+	putenv((char*)"GTK_CSD=0");
+		
 #ifdef WIN32 /*Fire up winsock2.*/
+	putenv((char*)"XDG_DATA_DIRS=.");
+
 	WSADATA WSAData;
 
     if (WSAStartup(MAKEWORD(1,1), &WSAData) != 0)
@@ -93,10 +96,9 @@ int main(int argc, char **argv)
 	InitCommonControlsEx(&ICC);
 #endif
 
-	
 	if (argc > 1)
 	{
-		for (; Inc < argc; ++Inc)
+		for (int Inc = 0; Inc < argc; ++Inc)
 		{
 			if (!strcmp(argv[Inc], "--help") || !strcmp(argv[Inc], "--version"))
 			{

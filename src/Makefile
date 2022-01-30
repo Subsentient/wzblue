@@ -1,7 +1,7 @@
 GTKCHOICE = 2
 PKGCONFIG = pkg-config
-CFLAGS = -std=gnu11 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0` -Wno-deprecated-declarations
-LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` substrings/libsubstrings.a
+CFLAGS = -std=gnu11 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0` -Wno-deprecated-declarations -D_FORTIFY_SOURCE=0 -fstack-protector
+LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` substrings/libsubstrings.a -fstack-protector
 OUTFILE = ../wzblue
 OBJECTS = wz.o netcore.o main.o gui.o settings.o
 
