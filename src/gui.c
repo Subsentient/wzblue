@@ -893,19 +893,12 @@ static void GUI_LaunchGame(const GameStruct *GS)
 	//Bigger than we'll ever need.
 	char **Argv = calloc(64, sizeof(char*));
 	
-	unsigned Inc = 0;
-	
+#define WZBLUE_STRING_LEN 256
 	//THe binary and the host/join option need to be allocated by us.
-	Argv[0] = calloc(256, 1);
+	char IPFormat[WZBLUE_STRING_LEN] = "--join=";
+	char PortFormat[WZBLUE_STRING_LEN] = "--gameport=";
 	
-	if (!GS->Internal_IsEmpty)
-	{
-		Argv[1] = calloc(256, 1);
-		Argv[2] = calloc(256, 1);
-	}
-	
-	char IPFormat[128] = "--join=";
-	char PortFormat[128] = "--gameport=";
+	Argv[0] = calloc(WZBLUE_STRING_LEN, 1);
 	
 	if (GS->Internal_IsHost)
 	{
@@ -930,24 +923,34 @@ static void GUI_LaunchGame(const GameStruct *GS)
 	}
 	
 	//Copy in the binary path.
-	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, 256);
-	
-	if (!GS->Internal_IsEmpty)//Copy in the host or join parameter,
+	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, WZBLUE_STRING_LEN);
+
+	if (*IPFormat != '\0')
 	{
-		SubStrings.Copy(Argv[1], IPFormat, 256);
-		SubStrings.Copy(Argv[2], PortFormat, 256);
+		Argv[1] = calloc(WZBLUE_STRING_LEN, 1);
+
+		SubStrings.Copy(Argv[1], IPFormat, WZBLUE_STRING_LEN);
 	}
 	
-	char CWD[1024];
+	if (*PortFormat != '\0')
+	{
+		Argv[2] = calloc(WZBLUE_STRING_LEN, 1);
+
+		SubStrings.Copy(Argv[2], PortFormat, WZBLUE_STRING_LEN);
+	}
+	
+	char CWD[1024] = { '\0' };
+
 	GUI_GetBinaryCWD(*Argv, CWD, sizeof CWD);
 	
 	chdir(CWD);
 	
 	const char *Iter = ExtraOptions;
 
-	char Temp[256];
+	char Temp[WZBLUE_STRING_LEN];
+	
 	//Break ExtraOptions up into argv format.
-	Inc = GS->Internal_IsEmpty ? 1 : (GS->Internal_IsHost ? 2 : 3);
+	size_t Inc = GS->Internal_IsEmpty ? 1 : (GS->Internal_IsHost ? 2 : 3);
 	
 	for (; SubStrings.CopyUntilC(Temp, sizeof Temp, &Iter, " ", TRUE); ++Inc)
 	{
@@ -982,7 +985,8 @@ static void GUI_LaunchGame(const GameStruct *GS)
 	char BinaryWD[1024];
 	GUI_GetBinaryCWD(WZString, BinaryWD, sizeof BinaryWD);
 	
-	char CWD[1024];
+	char CWD[1024] = { '\0' };
+	
 	getcwd(CWD, sizeof CWD);
 	
 	char IPFormat[128] = "--join=";
