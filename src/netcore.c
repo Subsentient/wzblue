@@ -58,6 +58,25 @@ gboolean Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDesc
 	return TRUE;
 }
 
+gboolean Net_Write_Sized(int SockDescriptor, const char *InMsg, const size_t Len)
+{
+	size_t Transferred = 0, TotalTransferred = 0;
+
+	do
+	{
+		Transferred = send(SockDescriptor, InMsg + TotalTransferred, (Len - TotalTransferred), 0);
+		
+		if (Transferred == -1) /*This is ugly I know, but it's converted implicitly, so shut up.*/
+		{
+			return FALSE;
+		}
+		
+		TotalTransferred += Transferred;
+	} while (Len > TotalTransferred);
+	
+	return TRUE;
+}
+
 gboolean Net_Write(int SockDescriptor, const char *InMsg)
 {
 	size_t StringSize = strlen(InMsg);

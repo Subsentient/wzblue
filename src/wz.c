@@ -118,7 +118,8 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	static uint32_t PrevAvailable;
 	int WZSocket = 0;
 	uint32_t Inc = 0;
-
+	bool SecondIteration = false;
+	bool ThrowawayFirst = false;
 	
 	if (!Net_Connect(Server, Port, &WZSocket))
 	{
@@ -127,12 +128,17 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 		return FALSE;
 	}
 	
-	if (!Net_Write(WZSocket, "list\r\n"))
+	if (!Net_Write_Sized(WZSocket, "list", sizeof("list")))
 	{
 		puts("Unable to write LIST command to lobby server!");
 		*ConnErr = TRUE;
 		return FALSE;
 	}
+
+ReloadGames:
+	;
+
+	uint32_t PrevGameCount = *GamesAvailable;
 	
 	/*Get number of available games.*/
 	if (!Net_Read(WZSocket, GamesAvailable, sizeof(uint32_t), FALSE))
@@ -143,12 +149,30 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	}
 	
 	*GamesAvailable = ntohl(*GamesAvailable);
+
+	fprintf(stderr, "Received GamesAvailable of %u, second iteration: %s\n", (unsigned)*GamesAvailable, SecondIteration ? "True" : "False");
 	
 	/*Allocate space for them.*/
-	*Pointer = GamesList = calloc(*GamesAvailable + 1, sizeof(GameStruct));
+	if (SecondIteration)
+	{
+		if (ThrowawayFirst)
+		{
+			free(GamesList);
+			*Pointer = GamesList = calloc(*GamesAvailable + 1, sizeof(GameStruct));
+		}
+		else
+		{
+			*Pointer = GamesList = realloc(GamesList, sizeof(GameStruct) * (PrevGameCount + *GamesAvailable + 1));
+		}
+	}
+	else
+	{
+		*Pointer = GamesList = calloc(*GamesAvailable + 1, sizeof(GameStruct));
+	}
 
-	unsigned Usable = 0;
-	for (unsigned Inc = 0; Inc < *GamesAvailable; ++Inc)
+	uint32_t Usable = (SecondIteration && !ThrowawayFirst) ? PrevGameCount : 0;
+	
+	for (uint32_t Inc = 0; Inc < *GamesAvailable; ++Inc)
 	{ /*Receive the listings.*/
 		GameStruct Temp = { 0 };
 		
@@ -168,6 +192,83 @@ gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *Game
 	}
 
 	*GamesAvailable = Usable;
+
+	if (!SecondIteration) //New WZ sends the first batch as 11 games.
+	{ //Means we need to download the rest.
+		uint32_t LobbyStatusCode = 0;
+		
+		if (!Net_Read(WZSocket, &LobbyStatusCode, sizeof LobbyStatusCode, FALSE))
+		{
+			fprintf(stderr, "Failed to download lobby status code!\n");
+			
+			if (PrevList) free(PrevList);
+			PrevList = NULL;
+			free(GamesList);
+			*ConnErr = TRUE;
+			return FALSE;
+		}
+
+		LobbyStatusCode = ntohl(LobbyStatusCode);
+
+		uint32_t MOTDLength = 0;
+
+		if (!Net_Read(WZSocket, &MOTDLength, sizeof MOTDLength, FALSE))
+		{
+			fprintf(stderr, "Failed to download lobby MOTD length!\n");
+			
+			if (PrevList) free(PrevList);
+			PrevList = NULL;
+			free(GamesList);
+			*ConnErr = TRUE;
+			return FALSE;
+		}
+
+		MOTDLength = ntohl(MOTDLength);
+		
+		char *MOTD = calloc(MOTDLength + 1, 1);
+		
+		if (!Net_Read(WZSocket, MOTD, MOTDLength, FALSE))
+		{
+			fprintf(stderr, "Failed to download lobby MOTD length!\n");
+			free(MOTD);
+			if (PrevList) free(PrevList);
+			PrevList = NULL;
+			free(GamesList);
+			*ConnErr = TRUE;
+			return FALSE;
+		}
+
+		fprintf(stderr, "Lobby server MOTD: %s\n", MOTD);
+		//Not using it yet.
+		free(MOTD);
+
+		uint32_t ResponseFlag = 0;
+		
+		if (!Net_Read(WZSocket, &ResponseFlag, sizeof ResponseFlag, FALSE))
+		{
+			if (PrevList) free(PrevList);
+			PrevList = NULL;
+			free(GamesList);
+			*ConnErr = TRUE;
+		}
+
+		ResponseFlag = ntohl(ResponseFlag);
+
+		SecondIteration = true;
+
+		if (ResponseFlag & 0x01)
+		{
+			fprintf(stderr, "Server wants us to discard previous games list.\n");
+			
+			ThrowawayFirst = true;
+		}
+		else
+		{
+			fprintf(stderr, "Server wants us to append to previous games list.\n");
+		}
+
+		goto ReloadGames;
+	}
 	
 	Net_Disconnect(WZSocket);
 	

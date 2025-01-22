@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.3.0"
+#define WZBLUE_VERSION "1.3.1"
 
 #include <gtk/gtk.h>
 
@@ -136,6 +136,7 @@ gboolean Net_Disconnect(int SockDescriptor);
 gboolean Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, gboolean TextStream);
 gboolean Net_Disconnect(int SockDescriptor);
 gboolean Net_Write(int SockDescriptor, const char *InMsg);
+gboolean Net_Write_Sized(int SockDescriptor, const char *InMsg, const size_t Len);
 
 /*wz.c*/
 gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer, gboolean *ConnErrOut);
