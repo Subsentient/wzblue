@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.3.1"
+#define WZBLUE_VERSION "1.3.2"
 
 #include <gtk/gtk.h>
 
@@ -102,6 +102,7 @@ struct Settings
 	enum SettingsChoice VBOS;
 	enum SettingsChoice TextureCompression;
 	enum SettingsChoice HideIncompatibleGames;
+	enum SettingsChoice HideEmptyGames;
 	
 	//For future options
 	enum SettingsChoice Reserved2;
@@ -174,5 +175,7 @@ void Settings_RadioButtonInit(GtkWidget *RadioButtons[3], const enum SettingsCho
 void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax);
 void Settings_LobbyURL_Save(GtkWidget *Entry);
 void Settings_SetHideIncompatible(GtkCheckButton *Button);
+void Settings_SetHideEmpty(GtkCheckButton *Button);
+
 
 #endif //__WZBLUE_H__

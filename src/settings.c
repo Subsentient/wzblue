@@ -83,6 +83,12 @@ void Settings_SetHideIncompatible(GtkCheckButton *Button)
 	Main_LoopFunc(&False);
 }
 
+void Settings_SetHideEmpty(GtkCheckButton *Button)
+{
+	Settings.HideEmptyGames = gtk_toggle_button_get_active((GtkToggleButton*)Button) ? CHOICE_YES : CHOICE_NO;
+	Main_LoopFunc(&False);
+}
+
 void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Choice)
 {
 	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))

@@ -356,6 +356,16 @@ GtkWidget *GUI_InitGUI()
 	gtk_box_pack_start((GtkBox*)HBox, gtk_vseparator_new(), FALSE, TRUE, 0);
 	gtk_box_pack_start((GtkBox*)HBox, gtk_label_new("Hide incompatible games"), FALSE, FALSE, 0);
 	gtk_box_pack_start((GtkBox*)HBox, CheckButton, FALSE, FALSE, 0);
+
+	GtkWidget *EmptyButton = gtk_check_button_new();
+
+	g_signal_connect((GObject*)EmptyButton, "toggled", (GCallback)Settings_SetHideEmpty, NULL);
+
+	gtk_toggle_button_set_active((GtkToggleButton*)EmptyButton, Settings.HideEmptyGames == CHOICE_YES);
+	
+	gtk_box_pack_start((GtkBox*)HBox, gtk_vseparator_new(), FALSE, TRUE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, gtk_label_new("Hide empty games"), FALSE, FALSE, 0);
+	gtk_box_pack_start((GtkBox*)HBox, EmptyButton, FALSE, FALSE, 0);
 	
 	gtk_container_add((GtkContainer*)Align, HBox);
 	

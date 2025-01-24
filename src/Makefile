@@ -1,4 +1,4 @@
-GTKCHOICE = 2
+GTKCHOICE = 3
 PKGCONFIG = pkg-config
 CFLAGS = -std=gnu11 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0` -Wno-deprecated-declarations -D_FORTIFY_SOURCE=0 -fstack-protector
 LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` substrings/libsubstrings.a -fstack-protector
@@ -22,9 +22,9 @@ else
 endif
 
 ifeq ($(OS),WIN)
-	CFLAGS += -lws2_32 -mwindows -lcomctl32
 	OUTFILE = ../wzblue.exe
 	OBJECTS += ../win32/win.o
+	LDFLAGS += -mwindows -lstdc++ -lws2_32 -lcomctl32
 endif
 	
 all: substrings_sub wzc netcorec mainc guic settingsc

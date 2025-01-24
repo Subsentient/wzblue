@@ -185,10 +185,20 @@ ReloadGames:
 			return FALSE;
 		}
 
-		if (Settings.HideIncompatibleGames != CHOICE_YES || SubStrings.Compare(GameVersion, Temp.VersionString) || !*GameVersion)
+	
+		if (Settings.HideIncompatibleGames == CHOICE_YES && *GameVersion && !SubStrings.Compare(GameVersion, Temp.VersionString))
 		{
-			GamesList[Usable++] = Temp;
+			continue;
 		}
+
+
+		if (Settings.HideEmptyGames == CHOICE_YES && !Temp.NetSpecs.CurPlayers)
+		{
+			continue;
+		}
+		
+		GamesList[Usable++] = Temp;
+		
 	}
 
 	*GamesAvailable = Usable;
