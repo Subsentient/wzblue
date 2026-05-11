@@ -99,6 +99,25 @@ gboolean WZ_DecodeToGameStruct(const char *LineData, GameStruct *Out)
 		return FALSE;
 	}
 	
+	cJSON *SpecsObject = cJSON_GetObjectItemCaseSensitive(Object, "specs");
+	
+	
+	if (!SpecsObject)
+	{
+		cJSON_Delete(Object);
+		return FALSE;
+	}
+	
+	//Might be an empty value;
+		
+	GetIntegerMemberFromObject(SpecsObject, "cur", &RV.CurSpecs); //Might not exist, we don't care
+	
+	if (!GetIntegerMemberFromObject(SpecsObject, "max", &RV.MaxSpecs))
+	{ //We always expect MaxSpecs to be populated
+		cJSON_Delete(Object);
+		return FALSE;
+	}
+	
 	cJSON *MapObject = cJSON_GetObjectItemCaseSensitive(Object, "map");
 	
 	if (!MapObject->child)
@@ -124,6 +143,48 @@ gboolean WZ_DecodeToGameStruct(const char *LineData, GameStruct *Out)
 		cJSON_Delete(Object);
 
 		return FALSE;
+	}
+	
+	//Handle private games
+	cJSON *PrivateGameObj = cJSON_GetObjectItemCaseSensitive(Object, "private");
+	
+	if (PrivateGameObj)
+	{
+		RV.PrivateGame = PrivateGameObj->type == cJSON_True;
+	}
+	
+	//Handle blind games
+	cJSON *BlindModeObj = cJSON_GetObjectItemCaseSensitive(Object, "blind");
+	
+	if (BlindModeObj)
+	{
+		RV.BlindGame = !!BlindModeObj->valueint;
+	}
+
+	//Handle mods
+	cJSON *ModsArray = cJSON_GetObjectItemCaseSensitive(Object, "mods");
+	
+	if (ModsArray != NULL)
+	{
+		cJSON *Worker = ModsArray->child;
+		
+		for (; Worker != NULL; (Worker = Worker->next))
+		{
+			char ModName[256] = { '\0' };
+			
+			if (!GetStringMemberFromObject(Worker, "name", ModName, sizeof ModName))
+			{
+				fprintf(stderr, "WARNING: No \"name\" field in mods list!");
+				continue;
+			}
+			
+			SubStrings.Cat(RV.ModList, Worker->valuestring, sizeof RV.ModList);
+			
+			if (Worker->next) //Not the last item
+			{
+				SubStrings.Cat(RV.ModList, ", ", sizeof RV.ModList);
+			}
+		}
 	}
 	
 	memcpy(Out, &RV, sizeof RV);

@@ -26,14 +26,15 @@ typedef struct
 	
 	int32_t MaxPlayers;
 	int32_t CurPlayers;
-	
+	int32_t MaxSpecs;
+	int32_t CurSpecs;
 	char Map[64];
 	char HostNick[64];
 	char VersionString[64];
-	char ModList[255];
-	uint32_t PrivateGame;
+	char ModList[1024];
+	bool PrivateGame;
+	bool BlindGame;
 	uint32_t MapMod; /*PureGame in 2.3/Legacy, PureMap in 3.1.*/
-	uint32_t Mods;
 	
 	union
 	{ //So we can pass settings around in the struct. Sneaky hack.

@@ -1228,7 +1228,9 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	
 	for (; Inc < GamesAvailable; ++Inc)
 	{
-		char ModString[384] = { '\0' };
+		char ModString[(sizeof GamesList[Inc].ModList) + 256] = { '\0' };
+		const char *BlindString = GamesList[Inc].BlindGame ? "<b><span foreground=\"#00ffff\">(Blind game)</span></b>" : "";
+		
 		const gboolean MapMod = GamesList[Inc].MapMod;
 		
 		if (GamesList[Inc].CurPlayers >= GamesList[Inc].MaxPlayers)
@@ -1254,14 +1256,15 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 			snprintf(ModString, sizeof ModString, " <b><span foreground=\"red\">(mods: %s)</span></b>",  GamesList[Inc].ModList);
 		}
 		
-		
 		snprintf(OutBuf, sizeof OutBuf,
 				"Name: <b><span foreground=\"%s\">%s</span></b> | "
 				"Map: <b><span foreground=\"%s\">%s</span></b>%s | "
 				"Host: <b><span foreground=\"%s\">%s</span></b>\n"
-				"Players: <b>%d/%d</b> %s| GameID: <b>%s</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
+				"Players: <b>%d/%d</b> <small>(<b>%d/%d</b> spectators)</small> %s%s | GameID: <small><small><b>%s</b></small></small> | Version: <b>%s</b>%s", Settings.Colors.Name,
 				GamesList[Inc].GameName, Settings.Colors.Map, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
-				Settings.Colors.Host, GamesList[Inc].HostNick, GamesList[Inc].CurPlayers, GamesList[Inc].MaxPlayers,
+				Settings.Colors.Host, GamesList[Inc].HostNick,
+				GamesList[Inc].CurPlayers, GamesList[Inc].MaxPlayers,
+				GamesList[Inc].CurSpecs, GamesList[Inc].MaxSpecs, BlindString,
 				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].GameID,
 				GamesList[Inc].VersionString, ModString);
 				
