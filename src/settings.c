@@ -12,10 +12,10 @@ See the included file UNLICENSE.TXT for more information.
 #include "wzblue.h"
 #include "substrings/substrings.h"
 
-#define CONFIGFILE "wzblueconfig-v3.bin"
+#define CONFIGFILE "wzblueconfig-v4.bin"
 
 //Globals
-struct Settings Settings = { .LobbyURL = "lobby.wz2100.net:9990", .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
+struct Settings Settings = { .LobbyURL = LOBBY_URL, .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
 enum SettingsChoice DefaultChoices[] = { CHOICE_UNSPECIFIED, CHOICE_NO, CHOICE_YES };
 
 //Prototypes

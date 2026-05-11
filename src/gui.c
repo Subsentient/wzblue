@@ -905,48 +905,34 @@ static void GUI_LaunchGame(const GameStruct *GS)
 	
 #define WZBLUE_STRING_LEN 256
 	//THe binary and the host/join option need to be allocated by us.
-	char IPFormat[WZBLUE_STRING_LEN] = "--join=";
-	char PortFormat[WZBLUE_STRING_LEN] = "--gameport=";
+	char JoinFormat[WZBLUE_STRING_LEN] = "--lobbyjoin=";
 	
 	Argv[0] = calloc(WZBLUE_STRING_LEN, 1);
 	
 	if (GS->Internal_IsHost)
 	{
-		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
-		*PortFormat = '\0';
+		SubStrings.Copy(JoinFormat, "--host", sizeof JoinFormat);
 	}
 	else if (GS->Internal_IsSpec)
 	{
-		snprintf(IPFormat, sizeof(IPFormat), "--spectate=%s", GS->NetSpecs.HostIP);		
-		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+		snprintf(JoinFormat, sizeof JoinFormat, "--lobbyspectate=%s", GS->GameID);		
 	}
 	else if (GS->Internal_IsEmpty)
 	{
-		*IPFormat = '\0';
-		*PortFormat = '\0';
 	}
 	else
 	{
-		SubStrings.Cat(IPFormat, GS->NetSpecs.HostIP, sizeof IPFormat);
-		
-		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+		SubStrings.Cat(JoinFormat, GS->GameID, sizeof JoinFormat);
 	}
 	
 	//Copy in the binary path.
 	SubStrings.Copy(Argv[0], *Settings.WZBinary ? Settings.WZBinary + (sizeof "file://" - 1) : WZBinary, WZBLUE_STRING_LEN);
 
-	if (*IPFormat != '\0')
+	if (*JoinFormat != '\0')
 	{
 		Argv[1] = calloc(WZBLUE_STRING_LEN, 1);
 
-		SubStrings.Copy(Argv[1], IPFormat, WZBLUE_STRING_LEN);
-	}
-	
-	if (*PortFormat != '\0')
-	{
-		Argv[2] = calloc(WZBLUE_STRING_LEN, 1);
-
-		SubStrings.Copy(Argv[2], PortFormat, WZBLUE_STRING_LEN);
+		SubStrings.Copy(Argv[1], JoinFormat, WZBLUE_STRING_LEN);
 	}
 	
 	char CWD[1024] = { '\0' };
@@ -999,45 +985,33 @@ static void GUI_LaunchGame(const GameStruct *GS)
 	
 	getcwd(CWD, sizeof CWD);
 	
-	char IPFormat[128] = "--join=";
-	char PortFormat[128] = "--gameport=";
+	char JoinFormat[256] = "--join=";
 	
 	if (GS->Internal_IsHost)
 	{
-		SubStrings.Copy(IPFormat, "--host", sizeof IPFormat);
-		*PortFormat = '\0';
+		SubStrings.Copy(JoinFormat, "--host", sizeof JoinFormat);
 	}
 	else if (GS->Internal_IsSpec)
 	{
-		snprintf(IPFormat, sizeof(IPFormat), "--spectate=%s", GS->NetSpecs.HostIP);		
-		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+		snprintf(JoinFormat, sizeof JoinFormat, "--spectate=%s", GS->GameID);		
 	}
 	else if (GS->Internal_IsEmpty)
 	{
-		*IPFormat = '\0';
-		*PortFormat = '\0';
+		memset(JoinFormat, 0, sizeof JoinFormat);
 	}
 	else
 	{
-		SubStrings.Cat(IPFormat, GS->NetSpecs.HostIP, sizeof IPFormat);
-		
-		snprintf(PortFormat, sizeof(PortFormat), "--gameport=%hu", GS->HostPort);
+		SubStrings.Cat(JoinFormat, GS->GameID, sizeof JoinFormat);
 	}
 	
 	SubStrings.Cat(WZString, " ", sizeof WZString);
 	
-	if (*IPFormat)
+	if (*JoinFormat)
 	{
-		SubStrings.Cat(WZString, IPFormat, sizeof WZString);
+		SubStrings.Cat(WZString, JoinFormat, sizeof WZString);
 		SubStrings.Cat(WZString, " ", sizeof WZString);
 	}
 	
-	if (*PortFormat)
-	{
-		SubStrings.Cat(WZString, PortFormat, sizeof WZString);
-		SubStrings.Cat(WZString, " ", sizeof WZString);
-	}
-
 	Settings_AppendOptionsToLaunch(WZString, sizeof WZString);
 	
     STARTUPINFO StartupInfo;
@@ -1257,7 +1231,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		char ModString[384] = { '\0' };
 		const gboolean MapMod = GamesList[Inc].MapMod;
 		
-		if (GamesList[Inc].NetSpecs.CurPlayers >= GamesList[Inc].NetSpecs.MaxPlayers)
+		if (GamesList[Inc].CurPlayers >= GamesList[Inc].MaxPlayers)
 		{ /*Game is full.*/
 			IconBuf = GuiInfo.Icon_Full_Pixbuf;
 		}
@@ -1285,11 +1259,11 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 				"Name: <b><span foreground=\"%s\">%s</span></b> | "
 				"Map: <b><span foreground=\"%s\">%s</span></b>%s | "
 				"Host: <b><span foreground=\"%s\">%s</span></b>\n"
-				"Players: <b>%d/%d</b> %s| IP: <b>%s:%hu</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
+				"Players: <b>%d/%d</b> %s| GameID: <b>%s</b> | Version: <b>%s</b>%s", Settings.Colors.Name,
 				GamesList[Inc].GameName, Settings.Colors.Map, GamesList[Inc].Map, MapMod ? " <b><span foreground=\"red\">(map-mod)</span></b>" : "",
-				Settings.Colors.Host, GamesList[Inc].HostNick, GamesList[Inc].NetSpecs.CurPlayers, GamesList[Inc].NetSpecs.MaxPlayers,
-				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].NetSpecs.HostIP,
-				GamesList[Inc].HostPort, GamesList[Inc].VersionString, ModString);
+				Settings.Colors.Host, GamesList[Inc].HostNick, GamesList[Inc].CurPlayers, GamesList[Inc].MaxPlayers,
+				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].GameID,
+				GamesList[Inc].VersionString, ModString);
 				
 		GtkWidget *Icon = gtk_image_new_from_pixbuf(IconBuf);
 		
@@ -1321,7 +1295,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		g_signal_connect_swapped(G_OBJECT(Button), "clicked", (GCallback)JoinLaunch, Ptr);
 		g_signal_connect_swapped(G_OBJECT(SpecButton), "clicked", (GCallback)SpecLaunch, Ptr);
 		
-		if (GamesList[Inc].NetSpecs.CurPlayers == GamesList[Inc].NetSpecs.MaxPlayers)
+		if (GamesList[Inc].CurPlayers == GamesList[Inc].MaxPlayers)
 		{
 			gtk_widget_set_sensitive(Button, FALSE);
 			gtk_button_set_label((GtkButton*)Button, "Game Full");
