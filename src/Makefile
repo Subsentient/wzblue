@@ -1,9 +1,9 @@
 GTKCHOICE = 3
 PKGCONFIG = pkg-config
-CFLAGS = -std=gnu11 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0` -Wno-deprecated-declarations -D_FORTIFY_SOURCE=0 -fstack-protector
-LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` substrings/libsubstrings.a -fstack-protector
+CFLAGS = -std=gnu11 -pedantic -Wall -g -O0 `$(PKGCONFIG) --cflags libcurl` `$(PKGCONFIG) --cflags gtk+-$(GTKCHOICE).0` -Wno-deprecated-declarations -D_FORTIFY_SOURCE=0 -fstack-protector
+LDFLAGS = `$(PKGCONFIG) --libs gtk+-$(GTKCHOICE).0` `$(PKGCONFIG) --libs libcurl` substrings/libsubstrings.a -fstack-protector
 OUTFILE = ../wzblue
-OBJECTS = wz.o netcore.o main.o gui.o settings.o
+OBJECTS = wz.o curl.o main.o gui.o settings.o cJSON.o
 
 ifdef TOOLCHAIN
 	CC = $(TOOLCHAIN)-gcc
@@ -27,7 +27,7 @@ ifeq ($(OS),WIN)
 	LDFLAGS += -mwindows -lstdc++ -lws2_32 -lcomctl32
 endif
 	
-all: substrings_sub wzc netcorec mainc guic settingsc
+all: substrings_sub wzc mainc guic settingsc curlc cJSONc
 ifeq ($(OS),WIN)
 	$(MAKE) -C ../win32 all WINDRES=$(WINDRES)
 endif
@@ -37,8 +37,8 @@ substrings_sub:
 	$(MAKE) -C substrings static CC=$(CC) RANLIB=$(RANLIB)
 wzc:
 	$(CC) wz.c -c $(CFLAGS)
-netcorec:
-	$(CC) netcore.c -c $(CFLAGS)
+cJSONc:
+	$(CC) cJSON/cJSON.c -c $(CFLAGS)
 mainc:
 	$(CC) main.c -c $(CFLAGS)
 guic:
@@ -46,6 +46,8 @@ guic:
 settingsc:
 	$(CC) settings.c -c $(CFLAGS)
 
+curlc:
+	$(CC) curl.c -c $(CFLAGS)
 
 
 clean:

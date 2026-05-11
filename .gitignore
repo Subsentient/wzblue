@@ -9,3 +9,4 @@ win32/*.gch
 wzblue
 **/*.exe
 wzblueicon.png
+**/wzblueconfig-v*.bin

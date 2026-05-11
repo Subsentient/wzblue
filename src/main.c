@@ -35,28 +35,13 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 	GUI_SetStatusBar("Refreshing...");
 	GUI_Flush();
 
-	char Server[1024] = { 0 };
-	char PortText[16] = { 0 };
+	gboolean FetchOk = WZ_GetGamesList(&GamesAvailable, &GamesList);
 	
-	SubStrings.Split(Server, PortText, ":", Settings.LobbyURL, SPLIT_NOKEEP);
-	const unsigned short Port = atoi(PortText);
-
-	gboolean ConnErr = FALSE;
-	
-	gboolean Changed = WZ_GetGamesList(Server, Port, &GamesAvailable, &GamesList, &ConnErr);
-	
-	if (GamesAvailable)
-	{
-		if (!Changed)
-		{
-			GUI_SetStatusBar_GameCount(GamesAvailable);
-			return RetVal;
-		}
-	}
+	GUI_SetStatusBar_GameCount(GamesAvailable);
 	
 	GUI_ClearGames(GuiInfo.ScrolledWindow);
 	
-	if (ConnErr)
+	if (!FetchOk)
 	{
 		GUI_ConnErr(GuiInfo.ScrolledWindow);
 	}
@@ -69,7 +54,14 @@ gboolean Main_LoopFunc(gboolean *ViaLoop)
 		GUI_NoGames(GuiInfo.ScrolledWindow);
 	}
 	
-	GUI_SetStatusBar_GameCount(GamesAvailable);
+	if (!FetchOk)
+	{
+		GUI_SetStatusBar("Connection error");
+	}
+	else
+	{
+		GUI_SetStatusBar_GameCount(GamesAvailable);
+	}
 	
 	return RetVal;
 }

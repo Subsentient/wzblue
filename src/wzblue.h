@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "1.3.3"
+#define WZBLUE_VERSION "2.0.0-beta1"
 
 #include <gtk/gtk.h>
 
@@ -19,35 +19,20 @@ See the included file UNLICENSE.TXT for more information.
 
 typedef struct
 {
-	uint32_t StructVer;
+	char GameID[64];
 	char GameName[64];
 	
-	struct
-	{
-		int32_t Size;
-		int32_t Flags;
-		char HostIP[40];
-		int32_t MaxPlayers;
-		int32_t CurPlayers;
-		int32_t UserFlags[4];
-	} NetSpecs;
+	int32_t MaxPlayers;
+	int32_t CurPlayers;
 	
-	char SecondaryHosts[2][40];
-	char Extra[157];
-	uint16_t HostPort;
-	char Map[40];
-	char HostNick[40];
+	char Map[64];
+	char HostNick[64];
 	char VersionString[64];
 	char ModList[255];
-	uint32_t MajorVer, MinorVer;
 	uint32_t PrivateGame;
 	uint32_t MapMod; /*PureGame in 2.3/Legacy, PureMap in 3.1.*/
 	uint32_t Mods;
 	
-	uint32_t GameID;
-	
-	uint32_t Unused1;
-	uint32_t Unused2;
 	union
 	{ //So we can pass settings around in the struct. Sneaky hack.
 		struct
@@ -131,16 +116,13 @@ extern char GameVersion[1024];
 /*main.c*/
 gboolean Main_LoopFunc(gboolean *ViaLoop);
 
-/*netcore.c*/
-gboolean Net_Connect(const char *InHost, unsigned short PortNum, int *SocketDescriptor_);
-gboolean Net_Disconnect(int SockDescriptor);
-gboolean Net_Read(int SockDescriptor, void *OutStream_, unsigned MaxLength, gboolean TextStream);
-gboolean Net_Disconnect(int SockDescriptor);
-gboolean Net_Write(int SockDescriptor, const char *InMsg);
-gboolean Net_Write_Sized(int SockDescriptor, const char *InMsg, const size_t Len);
+
+/*curl.c*/
+bool Curl_GetLobbyHTTP(const char *const URL_, void *const OutStream_, const unsigned MaxOutBytes);
 
 /*wz.c*/
-gboolean WZ_GetGamesList(const char *Server, unsigned short Port, uint32_t *GamesAvailable, GameStruct **Pointer, gboolean *ConnErrOut);
+gboolean WZ_DecodeToGameStruct(const char *LineData, GameStruct *Out);
+gboolean WZ_GetGamesList(uint32_t *GamesAvailable, GameStruct **Pointer);
 void WZ_SendGamesList(const GameStruct *GamesList, uint32_t GamesAvailable, GtkWidget *ScrolledWindow);
 
 /*gui.c*/
