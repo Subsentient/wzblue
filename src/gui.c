@@ -1229,7 +1229,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 	for (; Inc < GamesAvailable; ++Inc)
 	{
 		char ModString[(sizeof GamesList[Inc].ModList) + 256] = { '\0' };
-		const char *BlindString = GamesList[Inc].BlindGame ? "<b><span foreground=\"#00ffff\">(Blind game)</span></b>" : "";
+		const char *BlindString = GamesList[Inc].BlindGame ? "<b><small><span foreground=\"#00ffff\">(Blind game)</span></small></b>" : "";
 		
 		const gboolean MapMod = GamesList[Inc].MapMod;
 		
@@ -1253,7 +1253,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 		/*Add mod warning even if we don't get the color for that.*/
 		if (GamesList[Inc].ModList[0] != '\0')
 		{
-			snprintf(ModString, sizeof ModString, " <b><span foreground=\"red\">(mods: %s)</span></b>",  GamesList[Inc].ModList);
+			snprintf(ModString, sizeof ModString, " <b><small><span foreground=\"red\">(mods: %s)</span></small></b>",  GamesList[Inc].ModList);
 		}
 		
 		snprintf(OutBuf, sizeof OutBuf,
@@ -1265,7 +1265,7 @@ void GUI_RenderGames(GtkWidget *ScrolledWindow, GameStruct *GamesList, uint32_t 
 				Settings.Colors.Host, GamesList[Inc].HostNick,
 				GamesList[Inc].CurPlayers, GamesList[Inc].MaxPlayers,
 				GamesList[Inc].CurSpecs, GamesList[Inc].MaxSpecs, BlindString,
-				GamesList[Inc].PrivateGame ? "<b><span foreground=\"orange\">(private)</span></b> " : "", GamesList[Inc].GameID,
+				GamesList[Inc].PrivateGame ? "<b><small><span foreground=\"orange\">(private)</span></small></b> " : "", GamesList[Inc].GameID,
 				GamesList[Inc].VersionString, ModString);
 				
 		GtkWidget *Icon = gtk_image_new_from_pixbuf(IconBuf);
