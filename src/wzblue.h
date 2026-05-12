@@ -8,7 +8,7 @@ See the included file UNLICENSE.TXT for more information.
 #ifndef __WZBLUE_H__
 #define __WZBLUE_H__
 
-#define WZBLUE_VERSION "2.0.0"
+#define WZBLUE_VERSION "2.0.1"
 
 #include <gtk/gtk.h>
 
@@ -86,16 +86,9 @@ struct Settings
 	enum SettingsChoice Sound;
 	enum SettingsChoice Shadows;
 	enum SettingsChoice Fullscreen;
-	enum SettingsChoice Shaders;
-	enum SettingsChoice VBOS;
 	enum SettingsChoice TextureCompression;
 	enum SettingsChoice HideIncompatibleGames;
 	enum SettingsChoice HideEmptyGames;
-	
-	//For future options
-	enum SettingsChoice Reserved2;
-	enum SettingsChoice Reserved3;
-	enum SettingsChoice Reserved4;
 	
 	//Color themes.
 	struct
@@ -148,8 +141,6 @@ void Settings_SetBinary(GtkFileChooserButton *Button);
 void Settings_SetSound(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetShadows(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Choice);
-void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice);
-void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetFullscreen(GtkRadioButton *Button, enum SettingsChoice *Choice);
 void Settings_SetResolution(GtkWidget *Button, GtkWidget **Boxes);
 void Settings_ClearResolution(GtkWidget *Button, GtkWidget **Boxes);

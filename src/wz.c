@@ -174,11 +174,11 @@ gboolean WZ_DecodeToGameStruct(const char *LineData, GameStruct *Out)
 			
 			if (!GetStringMemberFromObject(Worker, "name", ModName, sizeof ModName))
 			{
-				fprintf(stderr, "WARNING: No \"name\" field in mods list!");
+				fprintf(stderr, "WARNING: No \"name\" field in mods list!\n");
 				continue;
 			}
 			
-			SubStrings.Cat(RV.ModList, Worker->valuestring, sizeof RV.ModList);
+			SubStrings.Cat(RV.ModList, ModName, sizeof RV.ModList);
 			
 			if (Worker->next) //Not the last item
 			{

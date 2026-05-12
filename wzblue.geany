@@ -27,14 +27,14 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
-FILE_NAME_0=44499;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fgui.c;0;4
+current_page=3
+FILE_NAME_0=25057;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fgui.c;0;4
 FILE_NAME_1=792;Make;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2FMakefile;0;4
-FILE_NAME_2=779;C++;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fwzblue.h;0;4
-FILE_NAME_3=621;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fsettings.c;0;4
+FILE_NAME_2=3865;C++;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fwzblue.h;0;4
+FILE_NAME_3=453;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fsettings.c;0;4
 FILE_NAME_4=991;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fmain.c;0;4
 FILE_NAME_5=2605;C++;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Ficons.h;0;4
-FILE_NAME_6=2761;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fwz.c;0;4
+FILE_NAME_6=4043;C;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fwz.c;0;4
 FILE_NAME_7=1711;C++;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fsrc%2Fsubstrings%2Fsubstrings.h;0;4
 FILE_NAME_8=74;Make;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2FMakefile;0;4
 FILE_NAME_9=0;Make;0;EUTF-8;1;1;0;%2Fhome%2Fben%2Fwzblue%2Fwin32%2FMakefile;0;4

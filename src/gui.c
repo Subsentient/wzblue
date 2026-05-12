@@ -10,6 +10,7 @@ See the included file UNLICENSE.TXT for more information.
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include "wzblue.h"
 #include "substrings/substrings.h"
 #include "icons.h"
@@ -27,6 +28,8 @@ struct GooeyGuts GuiInfo;
 static GameStruct HostGS = { .Internal_IsHost = true };
 static GameStruct EmptyGS = { .Internal_IsEmpty = true };
 
+static GtkWidget *SettingsDialog;
+
 char GameVersion[1024];
 
 static void GTK_Destroy(GtkWidget *Widget, gpointer Stuff);
@@ -35,6 +38,7 @@ static void GUI_LoadIcons(void);
 static void GUI_LaunchGame(const GameStruct *GS);
 static void GUI_DrawLaunchFailure(void);
 static void GUI_DrawSettingsDialog(void);
+static void GUI_InitSettingsDialog(void);
 static void GUI_OpenColorWheel(void);
 static gboolean GUI_FindWZExecutable(char *const Out, unsigned OutMaxSize);
 static void GUI_GetBinaryCWD(const char *In, char *Out, unsigned OutMax);
@@ -394,8 +398,29 @@ static void GUI_CreateRadioButtonGroup(const unsigned Count, const char *const N
 		Out[Inc] = Prev = Func(Prev, Names[Inc]);
 	}
 }
-		
+
+static void GUI_HideSettingsDialog(GtkWidget *Unused)
+{
+	assert(Unused == SettingsDialog);
+	
+	if (!SettingsDialog) return;
+	
+	gtk_widget_hide(SettingsDialog);
+	
+	Settings_SaveSettings();
+}
+
 static void GUI_DrawSettingsDialog(void)
+{
+	if (!SettingsDialog)
+	{ //Lazy instantiation
+		GUI_InitSettingsDialog();
+	}
+	
+	gtk_widget_show_all(SettingsDialog);
+}
+
+static void GUI_InitSettingsDialog(void)
 {
 	GtkWidget *Win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
@@ -622,58 +647,6 @@ static void GUI_DrawSettingsDialog(void)
 
 	++Row;
 	
-	//Shaders
-	GtkWidget *ShadersLabel = gtk_label_new("Enable shaders");
-	GtkWidget *ShadersLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
-	
-	gtk_container_add((GtkContainer*)ShadersLabelAlign, ShadersLabel);
-	
-	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
-	
-	Settings_RadioButtonInit(RadioButtons, Settings.Shaders);
-	
-	gtk_table_attach((GtkTable*)Table, ShadersLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
-	
-	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-
-	//Disable the yes button
-	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
-	
-	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetShaders, DefaultChoices);
-	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetShaders, DefaultChoices + 1);
-	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetShaders, DefaultChoices + 2);
-	
-	++Row;
-	
-	//VBOS
-	GtkWidget *VBOSLabel = gtk_label_new("Enable OpenGL VBOS");
-	GtkWidget *VBOSLabelAlign = gtk_alignment_new(0.0, 0.5, 0.1, 0.1);
-	
-	gtk_container_add((GtkContainer*)VBOSLabelAlign, VBOSLabel);
-	
-	GUI_CreateRadioButtonGroup(3, RadioLabels, RadioButtons);
-	
-	Settings_RadioButtonInit(RadioButtons, Settings.VBOS);
-	
-	gtk_table_attach((GtkTable*)Table, VBOSLabelAlign, 0, 1, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
-	
-	gtk_table_attach((GtkTable*)Table, gtk_vseparator_new(), 1, 2, Row, Row + 1, GTK_SHRINK, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[0], 2, 3, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[1], 3, 4, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-	gtk_table_attach((GtkTable*)Table, RadioButtons[2], 4, 5, Row, Row + 1, GTK_SHRINK, GTK_SHRINK, 0, 0);
-
-	//Disable the yes button
-	gtk_widget_set_sensitive(RadioButtons[2], FALSE);
-	
-	g_signal_connect((GObject*)RadioButtons[0], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices);
-	g_signal_connect((GObject*)RadioButtons[1], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices + 1);
-	g_signal_connect((GObject*)RadioButtons[2], "toggled", (GCallback)Settings_SetVBOS, DefaultChoices + 2);
-	
-	++Row;
-	
 	
 	///Color options
 	
@@ -779,13 +752,14 @@ static void GUI_DrawSettingsDialog(void)
 	GtkWidget *CloseButtonAlign = gtk_alignment_new(1.0, 1.0, 0.01, 0.01);
 	
 	gtk_container_add((GtkContainer*)CloseButtonAlign, CloseButton);
-	g_signal_connect_swapped(G_OBJECT(CloseButton), "clicked", (GCallback)GTK_NukeWidget, Win);
+	g_signal_connect_swapped(G_OBJECT(CloseButton), "clicked", (GCallback)GUI_HideSettingsDialog, Win);
+	g_signal_connect(G_OBJECT(Win), "delete-event", (GCallback)GUI_HideSettingsDialog, NULL);
+	
 	gtk_table_attach((GtkTable*)Table, CloseButtonAlign, 4, 5, Row, Row + 1, GTK_FILL | GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-	///Draw it all
-	gtk_widget_show_all(Win);
-	return;
+	SettingsDialog = Win;
 }
+
 //Empty the scrolled window so we can rebuild it.
 void GUI_ClearGames(GtkWidget *ScrolledWindow)
 {

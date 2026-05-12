@@ -12,7 +12,7 @@ See the included file UNLICENSE.TXT for more information.
 #include "wzblue.h"
 #include "substrings/substrings.h"
 
-#define CONFIGFILE "wzblueconfig-v4.bin"
+#define CONFIGFILE "wzblueconfig-v5.bin"
 
 //Globals
 struct Settings Settings = { .LobbyURL = LOBBY_URL, .Colors.Name = "#009bff", .Colors.Map = "#00bb00", .Colors.Host = "#ff8300" };
@@ -97,27 +97,11 @@ void Settings_SetTextureCompress(GtkRadioButton *Button, enum SettingsChoice *Ch
 	}
 }
 
-void Settings_SetShaders(GtkRadioButton *Button, enum SettingsChoice *Choice)
-{
-	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))
-	{
-		Settings.Shaders = *Choice;
-	}
-}
-
 void Settings_SetFullscreen(GtkRadioButton *Button, enum SettingsChoice *Choice)
 {
 	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))
 	{
 		Settings.Fullscreen = *Choice;
-	}
-}
-
-void Settings_SetVBOS(GtkRadioButton *Button, enum SettingsChoice *Choice)
-{
-	if (gtk_toggle_button_get_active((GtkToggleButton*)Button))
-	{
-		Settings.VBOS = *Choice;
 	}
 }
 
@@ -245,16 +229,6 @@ void Settings_AppendOptionsToLaunch(char *const Out, unsigned OutMax)
 		}
 		default:
 			break;
-	}
-	
-	if (Settings.Shaders == CHOICE_NO)
-	{
-		SubStrings.Cat(Out, "--noshaders ", OutMax);
-	}
-	
-	if (Settings.VBOS == CHOICE_NO)
-	{
-		SubStrings.Cat(Out, "--novbos ", OutMax);
 	}
 	
 	if (Settings.Resolution.Width && Settings.Resolution.Height)
